@@ -1,0 +1,1 @@
+import{c as n,o as s}from"./index-CBSOjVcQ.js";const _=(e,t)=>{const o=e.__vccOpts||e;for(const[c,r]of t)o[c]=r;return o},a={};function f(e,t){return s(),n("h1",null,"Hi-Fi Prototype")}const i=_(a,[["render",f]]);export{i as default};
