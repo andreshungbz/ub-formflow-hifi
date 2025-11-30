@@ -44,7 +44,7 @@ export default function Header() {
             {studentId && (
               <NavigationMenuItem>
                 <Button asChild variant="outline">
-                  <Link href="/form-history">Form History</Link>
+                  <Link href={`/history/${studentId}`}>Form History</Link>
                 </Button>
               </NavigationMenuItem>
             )}
