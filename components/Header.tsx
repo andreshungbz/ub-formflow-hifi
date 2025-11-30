@@ -5,7 +5,9 @@ import {
   NavigationMenuList,
   NavigationMenuItem,
 } from '@/components/ui/navigation-menu';
+
 import { Button } from '@/components/ui/button';
+import { FileText, LogIn } from 'lucide-react'; // Import icons
 
 export default function Header() {
   return (
@@ -33,13 +35,19 @@ export default function Header() {
             <NavigationMenuItem>
               {/* All Forms Button */}
               <Button asChild variant="outline">
-                <Link href="/forms">All Forms</Link>
+                <Link href="/forms">
+                  <FileText size={16} />
+                  All Forms
+                </Link>
               </Button>
             </NavigationMenuItem>
             <NavigationMenuItem>
               {/* Login Button */}
               <Button asChild variant="default">
-                <Link href="/login">Login</Link>
+                <Link href="/login">
+                  <LogIn size={16} />
+                  Login
+                </Link>
               </Button>
             </NavigationMenuItem>
           </NavigationMenuList>
