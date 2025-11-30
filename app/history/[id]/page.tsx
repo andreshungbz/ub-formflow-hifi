@@ -1,11 +1,13 @@
 'use client';
 
+import { useAuth } from '@/context/AuthContext';
 import { downloadReceipt } from '@/lib/downloadReceipt';
 
 export default function Home() {
+  const { studentId } = useAuth();
+
   const handleDownload = () => {
-    // Example test data
-    downloadReceipt('2018118240', 'Form Submission Fee');
+    downloadReceipt(studentId, 'Test Form');
   };
 
   return (
@@ -15,7 +17,7 @@ export default function Home() {
         className="px-4 py-2 bg-ub-purple text-white rounded hover:bg-ub-purple/80 transition-colors"
         onClick={handleDownload}
       >
-        Download Test Receipt
+        Download Receipt
       </button>
     </div>
   );

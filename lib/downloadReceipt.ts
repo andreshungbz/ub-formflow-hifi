@@ -1,8 +1,8 @@
-export async function downloadReceipt(studentId: string, title: string) {
+export async function downloadReceipt(studentId: string | null, title: string) {
   try {
     const res = await fetch(
       `/api/receipt?studentId=${encodeURIComponent(
-        studentId
+        studentId!
       )}&title=${encodeURIComponent(title)}`
     );
 
