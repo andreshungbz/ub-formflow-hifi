@@ -8,7 +8,8 @@
 		"vscode": {
 			"extensions": [
 				"csstools.postcss",
-				"bradlc.vscode-tailwindcss"
+				"bradlc.vscode-tailwindcss",
+				"esbenp.prettier-vscode"
 			]
 		}
 	}
