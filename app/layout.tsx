@@ -22,7 +22,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <Header />
-          <main className="grow">{children}</main>
+          <main className="grow flex flex-col">{children}</main>
           <Footer />
         </AuthProvider>
       </body>
