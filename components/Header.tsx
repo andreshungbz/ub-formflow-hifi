@@ -4,45 +4,47 @@ import {
   NavigationMenu,
   NavigationMenuList,
   NavigationMenuItem,
-  NavigationMenuLink,
-  navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
 import { Button } from '@/components/ui/button';
 
 export default function Header() {
   return (
-    <header className="w-full flex flex-col sm:flex-row items-center px-4 py-3 gap-4">
+    <header className="w-full flex flex-col sm:flex-row items-center px-4 py-3 gap-4 bg-ub-purple">
       {/* UB FormFlow Logo */}
       <div className="text-xl font-bold whitespace-nowrap flex items-center gap-2 shrink-0">
-        <Image
-          src="/ub-formflow-logo-100x100.svg"
-          alt="UB FormFlow Logo"
-          width={40}
-          height={40}
-        />
-        <Link href="/">UB FormFlow</Link>
+        <Link
+          href="/"
+          className="text-ub-yellow flex items-center gap-2 shrink-0"
+        >
+          <Image
+            src="/ub-formflow-logo-100x100.svg"
+            alt="UB FormFlow Logo"
+            width={40}
+            height={40}
+          />
+          UB FormFlow
+        </Link>
       </div>
 
-      {/* Left-aligned Navigation Menu */}
-      <div className="w-full sm:grow flex flex-col items-center sm:items-start">
+      {/* Navigation */}
+      <div className="w-full sm:grow flex flex-col items-center sm:items-end">
         <NavigationMenu className="w-full">
-          <NavigationMenuList className="flex flex-col sm:flex-row gap-2 w-full">
+          <NavigationMenuList className="flex flex-col sm:flex-row gap-2 w-full justify-center sm:justify-start">
             <NavigationMenuItem>
-              <NavigationMenuLink
-                asChild
-                className={navigationMenuTriggerStyle()}
-              >
+              {/* All Forms Button */}
+              <Button asChild variant="outline">
                 <Link href="/forms">All Forms</Link>
-              </NavigationMenuLink>
+              </Button>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              {/* Login Button */}
+              <Button asChild variant="default">
+                <Link href="/login">Login</Link>
+              </Button>
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
       </div>
-
-      {/* Login Button */}
-      <Button asChild className="self-center sm:self-start">
-        <Link href="/login">Login</Link>
-      </Button>
     </header>
   );
 }
