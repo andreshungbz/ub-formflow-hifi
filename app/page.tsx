@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   Accordion,
@@ -7,29 +9,12 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Calendar, Download, Send } from "lucide-react";
-
-const upcomingForms = [
-  {
-    id: "withdrawal",
-    title: "Withdrawal Form",
-    dueDate: "November 15, 2025",
-    description:
-      "Tell us you plan to withdraw so we can pause billing, refund payment, and connect you with next steps.",
-    submitUrl: "/",
-    downloadUrl: "/forms/withdrawal-form.pdf",
-  },
-  {
-    id: "program-completion",
-    title: "Application for Program Completion",
-    dueDate: "November 20, 2025",
-    description:
-      "Finalize your records before graduation. The application lets advisors verify credits and release your diploma.",
-    submitUrl: "/",
-    downloadUrl: "/forms/program-completion.pdf",
-  },
-];
+import { formsConfig } from "@/lib/forms";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Home() {
+  const { studentId } = useAuth();
+
   return (
     <div className="bg-[#f7f6fb] py-16 flex-1">
       <div className="mx-auto flex max-w-5xl flex-col gap-10 px-4 text-center">
@@ -53,7 +38,7 @@ export default function Home() {
             collapsible
             className="mt-6 flex flex-col gap-4"
           >
-            {upcomingForms.map((form) => (
+            {formsConfig.map((form) => (
               <AccordionItem
                 key={form.id}
                 value={form.id}
@@ -76,15 +61,17 @@ export default function Home() {
                 <AccordionContent className="px-2 text-[#4e4b5c]">
                   <p>{form.description}</p>
                   <div className="mt-4 flex flex-wrap gap-3">
-                    <Button
-                      asChild
-                      className="bg-[#7c3090] text-white hover:bg-[#6c2780]"
-                    >
-                      <Link href={form.submitUrl}>
-                        <Send className="size-4" aria-hidden="true" />
-                        Submit Form
-                      </Link>
-                    </Button>
+                    {studentId && (
+                      <Button
+                        asChild
+                        className="bg-[#7c3090] text-white hover:bg-[#6c2780]"
+                      >
+                        <Link href={`/submit?form=${form.id}`}>
+                          <Send className="size-4" aria-hidden="true" />
+                          Submit Form
+                        </Link>
+                      </Button>
+                    )}
                     <Button
                       asChild
                       variant="outline"
