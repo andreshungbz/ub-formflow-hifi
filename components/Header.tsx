@@ -1,3 +1,5 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -5,15 +7,16 @@ import {
   NavigationMenuList,
   NavigationMenuItem,
 } from '@/components/ui/navigation-menu';
-
 import { Button } from '@/components/ui/button';
-import { FileText, LogIn } from 'lucide-react'; // Import icons
+import { useAuth } from '@/context/AuthContext';
 
 export default function Header() {
+  const { studentId, logout } = useAuth();
+
   return (
     <header className="w-full flex flex-col sm:flex-row items-center px-4 py-3 gap-4 bg-ub-purple">
       {/* UB FormFlow Logo */}
-      <div className="text-2xl font-bold whitespace-nowrap flex items-center gap-2 shrink-0">
+      <div className="text-xl font-bold whitespace-nowrap flex items-center gap-2 shrink-0">
         <Link
           href="/"
           className="text-ub-yellow flex items-center gap-2 shrink-0"
@@ -33,23 +36,32 @@ export default function Header() {
         <NavigationMenu className="w-full">
           <NavigationMenuList className="flex flex-col sm:flex-row gap-2 w-full justify-center sm:justify-start">
             <NavigationMenuItem>
-              {/* All Forms Button */}
               <Button asChild variant="outline">
-                <Link href="/forms">
-                  <FileText size={16} />
-                  All Forms
-                </Link>
+                <Link href="/forms">All Forms</Link>
               </Button>
             </NavigationMenuItem>
-            <NavigationMenuItem>
-              {/* Login Button */}
-              <Button asChild variant="default">
-                <Link href="/login">
-                  <LogIn size={16} />
-                  Login
-                </Link>
-              </Button>
-            </NavigationMenuItem>
+
+            {studentId && (
+              <NavigationMenuItem>
+                <Button asChild variant="outline">
+                  <Link href="/form-history">Form History</Link>
+                </Button>
+              </NavigationMenuItem>
+            )}
+
+            {!studentId ? (
+              <NavigationMenuItem>
+                <Button asChild variant="default">
+                  <Link href="/login">Login</Link>
+                </Button>
+              </NavigationMenuItem>
+            ) : (
+              <NavigationMenuItem>
+                <Button variant="default" onClick={logout}>
+                  {studentId} (Logout)
+                </Button>
+              </NavigationMenuItem>
+            )}
           </NavigationMenuList>
         </NavigationMenu>
       </div>
