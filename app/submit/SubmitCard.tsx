@@ -22,7 +22,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 
-const FILE_HELPER_TEXT = "Upload a completed PDF file (10MB max).";
+const FILE_HELPER_TEXT = "Upload a completed PDF, PNG, or JPG file (10MB max).";
 
 type SubmitCardProps = {
   formMeta: FormConfig;
@@ -45,14 +45,17 @@ export default function SubmitCard({ formMeta }: SubmitCardProps) {
     }
 
     const file = files[0];
-    const isPdf =
-      file.type === "application/pdf" ||
-      file.name.toLowerCase().endsWith(".pdf");
+    const allowedTypes = ["application/pdf", "image/png", "image/jpeg"];
+    const lowerName = file.name.toLowerCase();
+    const hasAllowedExtension = [".pdf", ".png", ".jpg", ".jpeg"].some((ext) =>
+      lowerName.endsWith(ext)
+    );
+    const isAllowed = allowedTypes.includes(file.type) || hasAllowedExtension;
 
-    if (!isPdf) {
+    if (!isAllowed) {
       setSelectedFile(null);
       setStatus("error");
-      setMessage("Only PDF files are allowed.");
+      setMessage("Only PDF, PNG, or JPG files are allowed.");
       return;
     }
 
@@ -169,7 +172,7 @@ export default function SubmitCard({ formMeta }: SubmitCardProps) {
             id={fileInputId}
             ref={fileInputRef}
             type="file"
-            accept="application/pdf"
+            accept="application/pdf,image/png,image/jpeg"
             className="sr-only"
             onChange={(event) => handleFiles(event.target.files)}
           />
