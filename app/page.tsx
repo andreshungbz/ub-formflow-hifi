@@ -7,27 +7,7 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Calendar, Download, Send } from "lucide-react";
-
-const upcomingForms = [
-  {
-    id: "withdrawal",
-    title: "Withdrawal Form",
-    dueDate: "November 15, 2025",
-    description:
-      "Tell us you plan to withdraw so we can pause billing, refund payment, and connect you with next steps.",
-    submitUrl: "/",
-    downloadUrl: "/forms/withdrawal-form.pdf",
-  },
-  {
-    id: "program-completion",
-    title: "Application for Program Completion",
-    dueDate: "November 20, 2025",
-    description:
-      "Finalize your records before graduation. The application lets advisors verify credits and release your diploma.",
-    submitUrl: "/",
-    downloadUrl: "/forms/program-completion.pdf",
-  },
-];
+import { formsConfig } from "@/lib/forms";
 
 export default function Home() {
   return (
@@ -53,7 +33,7 @@ export default function Home() {
             collapsible
             className="mt-6 flex flex-col gap-4"
           >
-            {upcomingForms.map((form) => (
+            {formsConfig.map((form) => (
               <AccordionItem
                 key={form.id}
                 value={form.id}
@@ -80,7 +60,7 @@ export default function Home() {
                       asChild
                       className="bg-[#7c3090] text-white hover:bg-[#6c2780]"
                     >
-                      <Link href={form.submitUrl}>
+                      <Link href={`/submit?form=${form.id}`}>
                         <Send className="size-4" aria-hidden="true" />
                         Submit Form
                       </Link>
