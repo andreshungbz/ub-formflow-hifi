@@ -1,105 +1,100 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Search,
   Download,
   FileText,
-  GraduationCap,
-  LogOut,
-  Stethoscope,
-  UserPlus,
-  AlertCircle,
-  Send,
 } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
-// Mock data for forms
-const formsData = [
-  {
-    id: "transcript",
-    title: "Transcript Request Form",
-    description: "Request official transcripts",
-    category: "Academic Forms",
-    icon: FileText,
-    downloadUrl: "/forms/transcript-request.pdf",
-  },
-  {
-    id: "program-completion",
-    title: "Application for Program Completion",
-    description: "Apply for graduation and program completion",
-    category: "Academic Forms",
-    icon: GraduationCap,
-    downloadUrl: "/forms/program-completion.pdf",
-  },
-  {
-    id: "deferred-exam",
-    title: "Deferred Exam Application",
-    description: "Apply to defer a final exam",
-    category: "Academic Forms",
-    icon: FileText,
-    downloadUrl: "/forms/deferred-exam.pdf",
-  },
-  {
-    id: "program-change",
-    title: "Program Change Form",
-    description: "Request to change your major or minor",
-    category: "Academic Forms",
-    icon: FileText,
-    downloadUrl: "/forms/program-change.pdf",
-  },
-  {
-    id: "som-application",
-    title: "SOM Application",
-    description: "School of Medicine application form",
-    category: "Admissions",
-    icon: Stethoscope,
-    downloadUrl: "/forms/som-application.pdf",
-  },
-  {
-    id: "undergrad-application",
-    title: "Undergrad Application",
-    description: "Undergraduate admission application",
-    category: "Admissions",
-    icon: UserPlus,
-    downloadUrl: "/forms/undergrad-application.pdf",
-  },
-  {
-    id: "withdrawal",
-    title: "Withdrawal Form",
-    description: "Withdraw from courses or university",
-    category: "Academic Forms",
-    icon: LogOut,
-    downloadUrl: "/forms/withdrawal-form.pdf",
-  },
-  {
-    id: "withdrawal-late",
-    title: "Late Withdrawal Form",
-    description: "Request for late withdrawal from courses",
-    category: "Academic Forms",
-    icon: AlertCircle,
-    downloadUrl: "/forms/withdrawal-late.pdf",
-  },
-];
+// Map category IDs to names (assuming 1 and 2 based on user's previous mock data)
+const CATEGORY_MAP: Record<number, string> = {
+  1: "Academic Forms",
+  2: "Admissions",
+  3: "Financial",
+  4: "Withdrawal",
+};
 
-const categories = ["All Categories", "Academic Forms", "Admissions"];
+interface FormType {
+  id: string;
+  name: string;
+  description: string;
+  category: number | null;
+  template_file: string | null;
+  downloadUrl?: string | null;
+}
 
 export default function FormsPage() {
-  const { studentId } = useAuth();
+  const [forms, setForms] = useState<FormType[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All Categories");
+  const router = useRouter();
+  const [supabase] = useState(() => createClient());
 
-  const filteredForms = formsData.filter((form) => {
+  useEffect(() => {
+    const fetchForms = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('form_types')
+          .select('*')
+          .eq('is_active', true);
+
+        if (error) throw error;
+
+        // Use public URLs for templates (synchronous, no extra API calls)
+        const formsWithUrls = (data || []).map((form) => {
+          let downloadUrl = null;
+          if (form.template_file) {
+            const { data: publicData } = supabase
+              .storage
+              .from('form-attachments')
+              .getPublicUrl(form.template_file);
+            downloadUrl = publicData.publicUrl;
+          }
+          return { ...form, downloadUrl };
+        });
+
+        setForms(formsWithUrls);
+      } catch (error) {
+        console.error('Error fetching forms:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchForms();
+  }, [supabase]);
+
+  // Get unique categories from fetched forms
+  const availableCategories = ["All Categories", ...Array.from(new Set(forms.map(f => f.category ? CATEGORY_MAP[f.category] || "Withdrawal" : "Withdrawal")))];
+
+  const filteredForms = forms.filter((form) => {
+    const categoryName = form.category ? CATEGORY_MAP[form.category] || "Withdrawal" : "Withdrawal";
     const matchesSearch =
-      form.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      form.description.toLowerCase().includes(searchQuery.toLowerCase());
+      form.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (form.description && form.description.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesCategory =
-      activeCategory === "All Categories" || form.category === activeCategory;
+      activeCategory === "All Categories" || categoryName === activeCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const handleCardClick = (formId: string) => {
+    router.push(`/forms/submit/${formId}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-[#f7f6fb] min-h-screen p-8 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#7c3090]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#f7f6fb] min-h-screen p-8">
@@ -122,7 +117,7 @@ export default function FormsPage() {
 
         {/* Categories */}
         <div className="flex flex-wrap gap-3">
-          {categories.map((category) => (
+          {availableCategories.map((category) => (
             <Button
               key={category}
               onClick={() => setActiveCategory(category)}
@@ -142,7 +137,8 @@ export default function FormsPage() {
           {filteredForms.map((form, index) => (
             <div
               key={form.id}
-              className="flex items-center justify-between rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+              onClick={() => handleCardClick(form.id)}
+              className="flex items-center justify-between rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md cursor-pointer group"
             >
               <div className="flex items-center gap-4">
                 <div
@@ -152,35 +148,37 @@ export default function FormsPage() {
                       : "bg-[#fec630]/10 text-[#fec630]"
                   }`}
                 >
-                  <form.icon className="h-6 w-6" />
+                  <FileText className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">{form.title}</h3>
+                  <h3 className="font-semibold text-gray-900 group-hover:text-[#7c3090] transition-colors">{form.name}</h3>
                   <p className="text-sm text-gray-500">{form.description}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                {studentId && (
-                  <Button
+              
+              <div className="flex items-center gap-2">
+                {form.downloadUrl ? (
+                  <Button 
+                    variant="outline" 
+                    className="gap-2 z-10" 
                     asChild
-                    className="bg-[#7c3090] text-white hover:bg-[#6c2780] gap-2"
+                    onClick={(e) => e.stopPropagation()} // Prevent card click when clicking download
                   >
-                    <Link href={`/submit?form=${form.id}`}>
-                      <Send className="h-4 w-4" />
-                      Submit Form
+                    <Link
+                      href={form.downloadUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Download className="h-4 w-4" />
+                      Download
                     </Link>
                   </Button>
-                )}
-                <Button variant="outline" size="icon" asChild>
-                  <Link
-                    href={form.downloadUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                ) : (
+                  <Button variant="ghost" disabled className="gap-2 text-gray-400">
                     <Download className="h-4 w-4" />
-                    <span className="sr-only">Download</span>
-                  </Link>
-                </Button>
+                    Unavailable
+                  </Button>
+                )}
               </div>
             </div>
           ))}

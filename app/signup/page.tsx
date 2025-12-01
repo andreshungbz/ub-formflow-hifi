@@ -12,19 +12,20 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
-import { User } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 
-export default function LoginCard() {
-  const { login } = useAuth();
+export default function SignupPage() {
+  const { signUp } = useAuth();
   const router = useRouter();
   const supabase = createClient();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -33,74 +34,49 @@ export default function LoginCard() {
     setError('');
     setLoading(true);
 
-    const { error: authError } = await login(email, password);
-
-    if (authError) {
-      setError(authError.message || 'Invalid email or password.');
+    // Validate passwords match
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
       setLoading(false);
       return;
     }
 
-    // Get the current user after login
+    // Validate password length
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      setLoading(false);
+      return;
+    }
+
+    const { error: signUpError } = await signUp(email, password);
+
+    if (signUpError) {
+      setError(signUpError.message || 'Failed to create account. Please try again.');
+      setLoading(false);
+      return;
+    }
+
+    // Get the user after signup (Supabase auto-signs in after signup)
     const { data: { user: currentUser } } = await supabase.auth.getUser();
     
     if (currentUser) {
-      // 1. Check if user has a student profile
-      const { data: studentProfile } = await supabase
-        .from('students')
-        .select('id')
-        .eq('id', currentUser.id)
-        .single();
-
-      if (studentProfile) {
-        setTimeout(() => router.push('/'), 800);
-        setLoading(false);
-        return;
-      }
-
-      // 2. If no student profile, check if user has a staff profile
-      const { data: staffProfile, error: roleError } = await supabase
-        .from('staff')
-        .select('id, role')
-        .eq('id', currentUser.id)
-        .single();
-
-      if (staffProfile) {
-        const roleData = staffProfile.role.toLowerCase();
-        
-        if (roleData === 'registrar') {
-          router.push('/registrar');
-        } else if (roleData === 'dean') {
-          router.push('/dean');
-        } else if (roleData === 'teacher') {
-          router.push('/teacher');
-        } else if (roleData === 'accounts_receivable') {
-          router.push('/accounts');
-        } else if (roleData === 'student') {
-          router.push('/history');
-        } else {
-          router.push('/');
-        }
-        setLoading(false);
-        return;
-      }
-
-      // 3. If neither, redirect to create profile
+      // Success - redirect to profile creation
       router.push('/profile/create');
     } else {
-      setError('Login successful but user data not found. Please try again.');
+      // If email confirmation is required, user might need to confirm first
+      setError('Account created! Please check your email to confirm your account, then log in.');
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
     <div className="flex flex-1 bg-background p-4 justify-start sm:justify-center sm:items-center min-h-[calc(100vh-8rem)]">
       <Card className="w-full max-w-sm">
         <CardHeader className="flex flex-col items-center">
-          <User className="w-12 h-12 text-ub-purple mb-2" />
-          <CardTitle>Student Login</CardTitle>
+          <UserPlus className="w-12 h-12 text-ub-purple mb-2" />
+          <CardTitle>Create Account</CardTitle>
           <CardDescription className="text-center">
-            Enter your email and password to access your account.
+            Sign up with your email to get started. You'll complete your profile next.
           </CardDescription>
         </CardHeader>
 
@@ -124,41 +100,47 @@ export default function LoginCard() {
             </div>
 
             <div className="grid gap-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <a
-                  href="#"
-                  className="text-sm underline-offset-4 hover:underline"
-                >
-                  Forgot password?
-                </a>
-              </div>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder=""
+                placeholder="At least 6 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={6}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
               />
             </div>
 
             {error && <p className="text-red-600 text-sm">{error}</p>}
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>
         </CardContent>
 
         <CardFooter className="flex flex-col gap-2">
           <p className="text-sm text-center text-muted-foreground">
-            Don't have an account?{' '}
+            Already have an account?{' '}
             <Link
-              href="/signup"
+              href="/login"
               className="text-ub-purple underline hover:text-ub-purple/80 transition-colors"
             >
-              Sign up
+              Sign in
             </Link>
           </p>
         </CardFooter>
@@ -166,3 +148,4 @@ export default function LoginCard() {
     </div>
   );
 }
+

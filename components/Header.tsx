@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 
 export default function Header() {
-  const { studentId, logout } = useAuth();
+  const { user, studentId, role, logout } = useAuth();
+  const isStudent = role === 'student';
 
   return (
     <header className="w-full flex flex-col sm:flex-row items-center px-4 py-3 gap-4 bg-ub-purple">
@@ -41,15 +42,31 @@ export default function Header() {
               </Button>
             </NavigationMenuItem>
 
-            {studentId && (
+            {isStudent && studentId && (
               <NavigationMenuItem>
                 <Button asChild variant="outline">
-                  <Link href={`/history/${studentId}`}>Form History</Link>
+                  <Link href={`/history/`}>Form History</Link>
                 </Button>
               </NavigationMenuItem>
             )}
 
-            {!studentId ? (
+            {role === 'teacher' && (
+              <NavigationMenuItem>
+                <Button asChild variant="outline">
+                  <Link href="/teacher">Teacher Dashboard</Link>
+                </Button>
+              </NavigationMenuItem>
+            )}
+
+            {role === 'dean' && (
+              <NavigationMenuItem>
+                <Button asChild variant="outline">
+                  <Link href="/dean">Dean Dashboard</Link>
+                </Button>
+              </NavigationMenuItem>
+            )}
+
+            {!user ? (
               <NavigationMenuItem>
                 <Button asChild variant="default">
                   <Link href="/login">Login</Link>
@@ -58,7 +75,7 @@ export default function Header() {
             ) : (
               <NavigationMenuItem>
                 <Button variant="default" onClick={logout}>
-                  {studentId} (Logout)
+                  {isStudent && studentId ? `${studentId} (Logout)` : 'Logout'}
                 </Button>
               </NavigationMenuItem>
             )}

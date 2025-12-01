@@ -1,6 +1,7 @@
-"use client";
+'use client';
 
-import Link from "next/link";
+import { useEffect, useState } from 'react';
+import { useRouter } from "next/navigation";
 import {
   Accordion,
   AccordionContent,
@@ -9,23 +10,101 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Calendar, Download, Send } from "lucide-react";
-import { formsConfig } from "@/lib/forms";
+import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 
-export default function Home() {
-  const { studentId } = useAuth();
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+interface FormType {
+  id: string;
+  name: string;
+  description: string;
+  deadline: string | null;
+  template_file: string | null;
+  downloadUrl?: string | null;
+}
 
-  const upcomingForms = formsConfig
-    .filter((form) => {
-      const timestamp = Date.parse(form.dueDate);
-      if (Number.isNaN(timestamp)) {
-        return false;
+export default function Home() {
+  const [forms, setForms] = useState<FormType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const router = useRouter();
+  const [supabase] = useState(() => createClient());
+
+  useEffect(() => {
+    const fetchForms = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('form_types')
+          .select('*')
+          .not('deadline', 'is', null) // Filter out forms with no deadline if we want "shortest deadline"
+          .order('deadline', { ascending: true })
+          .limit(2);
+
+        // Fallback: if no deadlines are set, just get any 2 active forms
+        if (!data || data.length === 0) {
+           const { data: fallbackData, error: fallbackError } = await supabase
+            .from('form_types')
+            .select('*')
+            .limit(2);
+           
+           if (fallbackError) throw fallbackError;
+           
+           // Process fallback data with public URLs
+           const formsWithUrls = (fallbackData || []).map((form) => {
+             let downloadUrl = null;
+             if (form.template_file) {
+               const { data: urlData } = supabase
+                 .storage
+                 .from('form-attachments')
+                 .getPublicUrl(form.template_file);
+               downloadUrl = urlData.publicUrl;
+             }
+             return { ...form, downloadUrl };
+           });
+           setForms(formsWithUrls);
+           return;
+        }
+
+        if (error) throw error;
+
+        // Process main data with public URLs
+        const formsWithUrls = (data || []).map((form) => {
+          let downloadUrl = null;
+          if (form.template_file) {
+            const { data: urlData } = supabase
+              .storage
+              .from('form-attachments')
+              .getPublicUrl(form.template_file);
+            downloadUrl = urlData.publicUrl;
+          }
+          return { ...form, downloadUrl };
+        });
+
+        setForms(formsWithUrls);
+      } catch (error) {
+        console.error('Error fetching forms:', error);
+      } finally {
+        setLoading(false);
       }
-      return timestamp >= today.getTime();
-    })
-    .sort((a, b) => Date.parse(a.dueDate) - Date.parse(b.dueDate));
+    };
+
+    fetchForms();
+  }, [supabase]);
+
+  const handleSubmit = (formId: string) => {
+    if (!user) {
+      router.push('/login');
+    } else {
+      router.push(`/forms/submit/${formId}`);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-[#f7f6fb] py-16 flex-1 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#7c3090]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#f7f6fb] py-16 flex-1">
@@ -45,69 +124,73 @@ export default function Home() {
             Upcoming Form Deadlines
           </h2>
 
-          <Accordion
-            type="single"
-            collapsible
-            className="mt-6 flex flex-col gap-4"
-          >
-            {upcomingForms.length === 0 && (
-              <p className="rounded-2xl border border-dashed border-[#fbd4b1] bg-[#fff8ef] px-6 py-10 text-center text-[#6f6c80]">
-                No upcoming deadlines to display.
-              </p>
-            )}
-            {upcomingForms.map((form) => (
-              <AccordionItem
-                key={form.id}
-                value={form.id}
-                className="overflow-hidden rounded-2xl border border-[#fbd4b1] bg-[#fff8ef] px-4 last:border last:border-[#fbd4b1]"
-              >
-                <AccordionTrigger className="gap-4 rounded-2xl px-2 py-4 text-base font-semibold text-[#322f3d] hover:no-underline cursor-pointer">
-                  <div className="flex w-full items-center gap-4">
-                    <span className="flex size-10 items-center justify-center rounded-full bg-white text-[#f17433]">
-                      <AlertCircle className="size-5" aria-hidden="true" />
-                    </span>
-                    <div className="flex flex-1 flex-col text-left">
-                      <span>{form.title}</span>
-                      <span className="mt-1 flex items-center gap-2 text-sm font-normal text-[#6f6c80]">
-                        <Calendar className="size-4" aria-hidden="true" />
-                        Due: {form.dueDate}
+          {forms.length === 0 ? (
+             <p className="mt-6 text-gray-500">No upcoming deadlines found.</p>
+          ) : (
+            <Accordion
+              type="single"
+              collapsible
+              className="mt-6 flex flex-col gap-4"
+            >
+              {forms.map((form) => (
+                <AccordionItem
+                  key={form.id}
+                  value={form.id}
+                  className="overflow-hidden rounded-2xl border border-[#fbd4b1] bg-[#fff8ef] px-4 last:border last:border-[#fbd4b1]"
+                >
+                  <AccordionTrigger className="gap-4 rounded-2xl px-2 py-4 text-base font-semibold text-[#322f3d] hover:no-underline cursor-pointer">
+                    <div className="flex w-full items-center gap-4">
+                      <span className="flex size-10 items-center justify-center rounded-full bg-white text-[#f17433]">
+                        <AlertCircle className="size-5" aria-hidden="true" />
                       </span>
+                      <div className="flex flex-1 flex-col text-left">
+                        <span>{form.name}</span>
+                        {form.deadline && (
+                          <span className="mt-1 flex items-center gap-2 text-sm font-normal text-[#6f6c80]">
+                            <Calendar className="size-4" aria-hidden="true" />
+                            Due: {new Date(form.deadline).toLocaleDateString(undefined, {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-2 text-[#4e4b5c]">
-                  <p>{form.description}</p>
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    {studentId && (
+                  </AccordionTrigger>
+                  <AccordionContent className="px-2 text-[#4e4b5c]">
+                    <p>{form.description}</p>
+                    <div className="mt-4 flex flex-wrap gap-3">
                       <Button
-                        asChild
+                        onClick={() => handleSubmit(form.id)}
                         className="bg-[#7c3090] text-white hover:bg-[#6c2780]"
                       >
-                        <Link href={`/submit?form=${form.id}`}>
-                          <Send className="size-4" aria-hidden="true" />
-                          Submit Form
-                        </Link>
+                        <Send className="size-4 mr-2" aria-hidden="true" />
+                        Submit Form
                       </Button>
-                    )}
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="border-[#f17433] text-[#f17433] hover:bg-[#ffe6d7]"
-                    >
-                      <Link
-                        href={form.downloadUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Download className="size-4" aria-hidden="true" />
-                        Download PDF
-                      </Link>
-                    </Button>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+                      
+                      {form.template_file && (
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="border-[#f17433] text-[#f17433] hover:bg-[#ffe6d7]"
+                        >
+                          <a
+                            href={form.downloadUrl || `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/form-attachments/${form.template_file}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Download className="size-4 mr-2" aria-hidden="true" />
+                            Download Template
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          )}
         </section>
       </div>
     </div>
