@@ -216,9 +216,9 @@ export default function SubmitCard({ formMeta }: SubmitCardProps) {
         <Button
           variant="outline"
           className="w-full rounded-2xl border-[#d7d3e6] text-[#4e4b5c] hover:bg-[#f5f2ff] sm:w-40"
-          onClick={handleCancel}
+          asChild
         >
-          Cancel
+          <Link href="/forms">Cancel</Link>
         </Button>
         <Button
           className={cn(

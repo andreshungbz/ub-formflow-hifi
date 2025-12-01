@@ -12,8 +12,10 @@ import {
   Stethoscope,
   UserPlus,
   AlertCircle,
+  Send,
 } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 // Mock data for forms
 const formsData = [
@@ -86,6 +88,7 @@ const formsData = [
 const categories = ["All Categories", "Academic Forms", "Admissions"];
 
 export default function FormsPage() {
+  const { studentId } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All Categories");
 
@@ -156,16 +159,29 @@ export default function FormsPage() {
                   <p className="text-sm text-gray-500">{form.description}</p>
                 </div>
               </div>
-              <Button variant="outline" className="gap-2" asChild>
-                <Link
-                  href={form.downloadUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Download className="h-4 w-4" />
-                  Download
-                </Link>
-              </Button>
+              <div className="flex items-center gap-3">
+                {studentId && (
+                  <Button
+                    asChild
+                    className="bg-[#7c3090] text-white hover:bg-[#6c2780] gap-2"
+                  >
+                    <Link href={`/submit?form=${form.id}`}>
+                      <Send className="h-4 w-4" />
+                      Submit Form
+                    </Link>
+                  </Button>
+                )}
+                <Button variant="outline" size="icon" asChild>
+                  <Link
+                    href={form.downloadUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span className="sr-only">Download</span>
+                  </Link>
+                </Button>
+              </div>
             </div>
           ))}
 
