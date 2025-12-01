@@ -84,15 +84,6 @@ export default function SubmitCard({ formMeta }: SubmitCardProps) {
     setMessage(`${selectedFile.name} was uploaded successfully.`);
   };
 
-  const handleCancel = () => {
-    setSelectedFile(null);
-    setStatus("idle");
-    setMessage(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
   const uploadButtonClasses = selectedFile
     ? "bg-[#7c3090] hover:bg-[#6d2880]"
     : "bg-[#b493ff] hover:bg-[#a078f8]";

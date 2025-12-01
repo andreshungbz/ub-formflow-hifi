@@ -14,6 +14,18 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function Home() {
   const { studentId } = useAuth();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const upcomingForms = formsConfig
+    .filter((form) => {
+      const timestamp = Date.parse(form.dueDate);
+      if (Number.isNaN(timestamp)) {
+        return false;
+      }
+      return timestamp >= today.getTime();
+    })
+    .sort((a, b) => Date.parse(a.dueDate) - Date.parse(b.dueDate));
 
   return (
     <div className="bg-[#f7f6fb] py-16 flex-1">
@@ -38,7 +50,12 @@ export default function Home() {
             collapsible
             className="mt-6 flex flex-col gap-4"
           >
-            {formsConfig.map((form) => (
+            {upcomingForms.length === 0 && (
+              <p className="rounded-2xl border border-dashed border-[#fbd4b1] bg-[#fff8ef] px-6 py-10 text-center text-[#6f6c80]">
+                No upcoming deadlines to display.
+              </p>
+            )}
+            {upcomingForms.map((form) => (
               <AccordionItem
                 key={form.id}
                 value={form.id}
