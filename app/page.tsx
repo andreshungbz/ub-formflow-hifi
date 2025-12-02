@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Accordion,
@@ -33,35 +33,34 @@ export default function Home() {
     const fetchForms = async () => {
       try {
         const { data, error } = await supabase
-          .from('form_types')
-          .select('*')
-          .not('deadline', 'is', null) // Filter out forms with no deadline if we want "shortest deadline"
-          .order('deadline', { ascending: true })
+          .from("form_types")
+          .select("*")
+          .not("deadline", "is", null) // Filter out forms with no deadline if we want "shortest deadline"
+          .order("deadline", { ascending: true })
           .limit(2);
 
         // Fallback: if no deadlines are set, just get any 2 active forms
         if (!data || data.length === 0) {
-           const { data: fallbackData, error: fallbackError } = await supabase
-            .from('form_types')
-            .select('*')
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from("form_types")
+            .select("*")
             .limit(2);
-           
-           if (fallbackError) throw fallbackError;
-           
-           // Process fallback data with public URLs
-           const formsWithUrls = (fallbackData || []).map((form) => {
-             let downloadUrl = null;
-             if (form.template_file) {
-               const { data: urlData } = supabase
-                 .storage
-                 .from('form-attachments')
-                 .getPublicUrl(form.template_file);
-               downloadUrl = urlData.publicUrl;
-             }
-             return { ...form, downloadUrl };
-           });
-           setForms(formsWithUrls);
-           return;
+
+          if (fallbackError) throw fallbackError;
+
+          // Process fallback data with public URLs
+          const formsWithUrls = (fallbackData || []).map((form) => {
+            let downloadUrl = null;
+            if (form.template_file) {
+              const { data: urlData } = supabase.storage
+                .from("form-attachments")
+                .getPublicUrl(form.template_file);
+              downloadUrl = urlData.publicUrl;
+            }
+            return { ...form, downloadUrl };
+          });
+          setForms(formsWithUrls);
+          return;
         }
 
         if (error) throw error;
@@ -70,9 +69,8 @@ export default function Home() {
         const formsWithUrls = (data || []).map((form) => {
           let downloadUrl = null;
           if (form.template_file) {
-            const { data: urlData } = supabase
-              .storage
-              .from('form-attachments')
+            const { data: urlData } = supabase.storage
+              .from("form-attachments")
               .getPublicUrl(form.template_file);
             downloadUrl = urlData.publicUrl;
           }
@@ -81,7 +79,7 @@ export default function Home() {
 
         setForms(formsWithUrls);
       } catch (error) {
-        console.error('Error fetching forms:', error);
+        console.error("Error fetching forms:", error);
       } finally {
         setLoading(false);
       }
@@ -92,7 +90,7 @@ export default function Home() {
 
   const handleSubmit = (formId: string) => {
     if (!user) {
-      router.push('/login');
+      router.push("/login");
     } else {
       router.push(`/forms/submit/${formId}`);
     }
@@ -125,7 +123,7 @@ export default function Home() {
           </h2>
 
           {forms.length === 0 ? (
-             <p className="mt-6 text-gray-500">No upcoming deadlines found.</p>
+            <p className="mt-6 text-gray-500">No upcoming deadlines found.</p>
           ) : (
             <Accordion
               type="single"
@@ -148,11 +146,15 @@ export default function Home() {
                         {form.deadline && (
                           <span className="mt-1 flex items-center gap-2 text-sm font-normal text-[#6f6c80]">
                             <Calendar className="size-4" aria-hidden="true" />
-                            Due: {new Date(form.deadline).toLocaleDateString(undefined, {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
+                            Due:{" "}
+                            {new Date(form.deadline).toLocaleDateString(
+                              undefined,
+                              {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              }
+                            )}
                           </span>
                         )}
                       </div>
@@ -168,7 +170,7 @@ export default function Home() {
                         <Send className="size-4 mr-2" aria-hidden="true" />
                         Submit Form
                       </Button>
-                      
+
                       {form.template_file && (
                         <Button
                           asChild
@@ -176,11 +178,17 @@ export default function Home() {
                           className="border-[#f17433] text-[#f17433] hover:bg-[#ffe6d7]"
                         >
                           <a
-                            href={form.downloadUrl || `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/form-attachments/${form.template_file}`}
+                            href={
+                              form.downloadUrl ||
+                              `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/form-attachments/${form.template_file}`
+                            }
                             target="_blank"
                             rel="noopener noreferrer"
                           >
-                            <Download className="size-4 mr-2" aria-hidden="true" />
+                            <Download
+                              className="size-4 mr-2"
+                              aria-hidden="true"
+                            />
                             Download Template
                           </a>
                         </Button>
