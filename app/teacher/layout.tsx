@@ -1,9 +1,8 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import TeacherNav from '@/components/TeacherNav';
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function TeacherLayout({
   children,
@@ -16,9 +15,9 @@ export default function TeacherLayout({
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        router.push('/login');
-      } else if (role !== 'teacher' && role !== 'admin' ) {
-        router.push('/');
+        router.push("/login");
+      } else if (role !== "teacher" && role !== "admin") {
+        router.push("/");
       }
     }
   }, [user, role, loading, router]);
@@ -31,7 +30,7 @@ export default function TeacherLayout({
     );
   }
 
-  if (!user || (role !== 'teacher' && role !== 'admin')) {
+  if (!user || (role !== "teacher" && role !== "admin")) {
     return null; // Don't render anything while redirecting
   }
 

@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/context/AuthContext';
-import Link from 'next/link';
-import { CheckCircle, XCircle, Clock, FileText } from 'lucide-react';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { CheckCircle, Clock, FileText } from "lucide-react";
+
+import { useAuth } from "@/context/AuthContext";
+import { createClient } from "@/lib/supabase/client";
 
 interface ApprovalRequest {
   id: string;
@@ -25,6 +26,37 @@ interface ApprovalRequest {
   };
 }
 
+const mapApproval = (approval: unknown): ApprovalRequest => {
+  const approvalRecord = approval as {
+    id: string;
+    approval_type: string;
+    created_at: string;
+    form_submissions?: unknown;
+  };
+
+  const submissionRecord = Array.isArray(approvalRecord.form_submissions)
+    ? approvalRecord.form_submissions[0]
+    : approvalRecord.form_submissions;
+  const submission = submissionRecord as ApprovalRequest["form_submissions"];
+
+  if (!submission) {
+    throw new Error("Missing submission data for approval");
+  }
+
+  return {
+    id: approvalRecord.id,
+    approval_type: approvalRecord.approval_type,
+    created_at: approvalRecord.created_at,
+    form_submissions: {
+      id: submission.id,
+      submission_number: submission.submission_number,
+      submitted_at: submission.submitted_at,
+      students: submission.students,
+      form_types: submission.form_types,
+    },
+  };
+};
+
 export default function TeacherDashboard() {
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,8 +69,9 @@ export default function TeacherDashboard() {
 
       try {
         const { data, error } = await supabase
-          .from('form_approvals')
-          .select(`
+          .from("form_approvals")
+          .select(
+            `
             id,
             approval_type,
             created_at,
@@ -55,15 +88,16 @@ export default function TeacherDashboard() {
                 name
               )
             )
-          `)
-          .eq('status', 'pending')
-          .eq('staff_id', user.id) // Filter by current user
-          .order('created_at', { ascending: true });
+          `
+          )
+          .eq("status", "pending")
+          .eq("staff_id", user.id) // Filter by current user
+          .order("created_at", { ascending: true });
 
         if (error) throw error;
-        setApprovals(data || []);
+        setApprovals((data || []).map(mapApproval));
       } catch (error) {
-        console.error('Error fetching approvals:', error);
+        console.error("Error fetching approvals:", error);
       } finally {
         setLoading(false);
       }
@@ -78,22 +112,29 @@ export default function TeacherDashboard() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Pending Approvals</h1>
-      
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">
+        Pending Approvals
+      </h1>
+
       {approvals.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <div className="mx-auto h-12 w-12 text-gray-400 mb-4">
             <CheckCircle className="h-12 w-12" />
           </div>
           <h3 className="text-lg font-medium text-gray-900">All caught up!</h3>
-          <p className="mt-2 text-gray-500">You have no pending forms to approve.</p>
+          <p className="mt-2 text-gray-500">
+            You have no pending forms to approve.
+          </p>
         </div>
       ) : (
         <div className="bg-white shadow overflow-hidden sm:rounded-md">
           <ul className="divide-y divide-gray-200">
             {approvals.map((approval) => (
               <li key={approval.id}>
-                <Link href={`/teacher/assess/${approval.form_submissions.id}?approvalId=${approval.id}`} className="block hover:bg-gray-50">
+                <Link
+                  href={`/teacher/assess/${approval.form_submissions.id}?approvalId=${approval.id}`}
+                  className="block hover:bg-gray-50"
+                >
                   <div className="px-4 py-4 sm:px-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
@@ -107,13 +148,16 @@ export default function TeacherDashboard() {
                             {approval.form_submissions.form_types.name}
                           </p>
                           <p className="text-sm text-gray-500">
-                            Submitted by {approval.form_submissions.students.first_name} {approval.form_submissions.students.last_name} ({approval.form_submissions.students.student_id})
+                            Submitted by{" "}
+                            {approval.form_submissions.students.first_name}{" "}
+                            {approval.form_submissions.students.last_name} (
+                            {approval.form_submissions.students.student_id})
                           </p>
                         </div>
                       </div>
                       <div className="ml-2 flex-shrink-0 flex flex-col items-end">
                         <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 capitalize">
-                          {approval.approval_type.replace('_', ' ')} Approval
+                          {approval.approval_type.replace("_", " ")} Approval
                         </p>
                         <p className="mt-1 text-xs text-gray-500 flex items-center">
                           <Clock className="h-3 w-3 mr-1" />

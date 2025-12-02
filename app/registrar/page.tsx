@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/context/AuthContext';
-import Link from 'next/link';
-import { CheckCircle, Clock, FileText } from 'lucide-react';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { CheckCircle, Clock, FileText } from "lucide-react";
+
+import { useAuth } from "@/context/AuthContext";
+import { createClient } from "@/lib/supabase/client";
 
 interface ApprovalRequest {
   id: string;
@@ -34,6 +35,41 @@ interface ApprovalWithPrecedingCheck extends ApprovalRequest {
   }[];
 }
 
+const mapApproval = (approval: unknown): ApprovalRequest => {
+  const approvalRecord = approval as {
+    id: string;
+    approval_type: string;
+    created_at: string;
+    sequence_order: number;
+    form_submission_id: string;
+    form_submissions?: unknown;
+  };
+
+  const submissionRecord = Array.isArray(approvalRecord.form_submissions)
+    ? approvalRecord.form_submissions[0]
+    : approvalRecord.form_submissions;
+  const submission = submissionRecord as ApprovalRequest["form_submissions"];
+
+  if (!submission) {
+    throw new Error("Missing submission data for approval");
+  }
+
+  return {
+    id: approvalRecord.id,
+    approval_type: approvalRecord.approval_type,
+    created_at: approvalRecord.created_at,
+    sequence_order: approvalRecord.sequence_order,
+    form_submission_id: approvalRecord.form_submission_id,
+    form_submissions: {
+      id: submission.id,
+      submission_number: submission.submission_number,
+      submitted_at: submission.submitted_at,
+      students: submission.students,
+      form_types: submission.form_types,
+    },
+  };
+};
+
 export default function RegistrarDashboard() {
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,8 +83,9 @@ export default function RegistrarDashboard() {
       try {
         // Fetch all registrar approvals (any registrar can see them)
         const { data, error } = await supabase
-          .from('form_approvals')
-          .select(`
+          .from("form_approvals")
+          .select(
+            `
             id,
             approval_type,
             created_at,
@@ -67,40 +104,51 @@ export default function RegistrarDashboard() {
                 name
               )
             )
-          `)
-          .eq('status', 'pending')
-          .eq('approval_type', 'registrar')
-          .order('created_at', { ascending: true });
+          `
+          )
+          .eq("status", "pending")
+          .eq("approval_type", "registrar")
+          .order("created_at", { ascending: true });
 
         if (error) throw error;
 
         // For each approval, fetch all approvals for that submission to check sequence
+        const rawApprovals = (data ?? []).map(mapApproval);
+
         const approvalsWithCheck = await Promise.all(
-          (data || []).map(async (approval) => {
+          rawApprovals.map(async (approval) => {
             const { data: allApprovals } = await supabase
-              .from('form_approvals')
-              .select('sequence_order, status')
-              .eq('form_submission_id', approval.form_submission_id);
+              .from("form_approvals")
+              .select("sequence_order, status")
+              .eq("form_submission_id", approval.form_submission_id);
 
             return {
               ...approval,
-              all_approvals: allApprovals || []
-            };
+              all_approvals: allApprovals || [],
+            } as ApprovalWithPrecedingCheck;
           })
         );
 
         // Filter to only show approvals where all preceding steps are completed
-        const readyApprovals = approvalsWithCheck.filter((approval: ApprovalWithPrecedingCheck) => {
-          // Check if any approval with lower sequence_order is still pending
-          const hasPendingPrecedingApproval = approval.all_approvals.some(
-            (a) => a.sequence_order < approval.sequence_order && a.status === 'pending'
-          );
-          return !hasPendingPrecedingApproval;
-        });
+        const readyApprovals = approvalsWithCheck
+          .filter((approval) => {
+            // Check if any approval with lower sequence_order is still pending
+            const hasPendingPrecedingApproval = approval.all_approvals.some(
+              (a) =>
+                a.sequence_order < approval.sequence_order &&
+                a.status === "pending"
+            );
+            return !hasPendingPrecedingApproval;
+          })
+          .map((approval) => {
+            const { all_approvals, ...rest } = approval;
+            void all_approvals;
+            return rest;
+          });
 
         setApprovals(readyApprovals);
       } catch (error) {
-        console.error('Error fetching approvals:', error);
+        console.error("Error fetching approvals:", error);
       } finally {
         setLoading(false);
       }
@@ -115,22 +163,29 @@ export default function RegistrarDashboard() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Pending Registrar Approvals</h1>
-      
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">
+        Pending Registrar Approvals
+      </h1>
+
       {approvals.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <div className="mx-auto h-12 w-12 text-gray-400 mb-4">
             <CheckCircle className="h-12 w-12" />
           </div>
           <h3 className="text-lg font-medium text-gray-900">All caught up!</h3>
-          <p className="mt-2 text-gray-500">You have no pending forms to approve.</p>
+          <p className="mt-2 text-gray-500">
+            You have no pending forms to approve.
+          </p>
         </div>
       ) : (
         <div className="bg-white shadow overflow-hidden sm:rounded-md">
           <ul className="divide-y divide-gray-200">
             {approvals.map((approval) => (
               <li key={approval.id}>
-                <Link href={`/registrar/assess/${approval.form_submissions.id}?approvalId=${approval.id}`} className="block hover:bg-gray-50">
+                <Link
+                  href={`/registrar/assess/${approval.form_submissions.id}?approvalId=${approval.id}`}
+                  className="block hover:bg-gray-50"
+                >
                   <div className="px-4 py-4 sm:px-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
@@ -144,7 +199,10 @@ export default function RegistrarDashboard() {
                             {approval.form_submissions.form_types.name}
                           </p>
                           <p className="text-sm text-gray-500">
-                            Submitted by {approval.form_submissions.students.first_name} {approval.form_submissions.students.last_name} ({approval.form_submissions.students.student_id})
+                            Submitted by{" "}
+                            {approval.form_submissions.students.first_name}{" "}
+                            {approval.form_submissions.students.last_name} (
+                            {approval.form_submissions.students.student_id})
                           </p>
                         </div>
                       </div>

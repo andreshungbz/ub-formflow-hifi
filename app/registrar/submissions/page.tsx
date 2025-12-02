@@ -1,10 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -12,31 +9,52 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Search, Eye } from 'lucide-react';
+} from "@/components/ui/table";
+import { Search, Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+import { createClient } from "@/lib/supabase/client";
+
+interface SubmissionRow {
+  id: string;
+  submission_number: string;
+  submitted_at: string;
+  status: string;
+  students: {
+    first_name: string;
+    last_name: string;
+    student_id: string;
+  };
+  form_types: {
+    name: string;
+  };
+}
 
 export default function SubmissionsPage() {
   const [supabase] = useState(() => createClient());
-  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [submissions, setSubmissions] = useState<SubmissionRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchSubmissions = async () => {
       try {
         const { data, error } = await supabase
-          .from('form_submissions')
-          .select(`
+          .from("form_submissions")
+          .select(
+            `
             *,
             students (first_name, last_name, student_id),
             form_types (name)
-          `)
-          .order('submitted_at', { ascending: false });
+          `
+          )
+          .order("submitted_at", { ascending: false });
 
         if (error) throw error;
-        setSubmissions(data || []);
+        setSubmissions((data || []) as SubmissionRow[]);
       } catch (error) {
-        console.error('Error fetching submissions:', error);
+        console.error("Error fetching submissions:", error);
       } finally {
         setLoading(false);
       }
@@ -45,12 +63,17 @@ export default function SubmissionsPage() {
     fetchSubmissions();
   }, [supabase]);
 
-  const filteredSubmissions = submissions.filter(sub => 
-    sub.students.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sub.students.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sub.students.student_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sub.form_types.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sub.submission_number?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSubmissions = submissions.filter(
+    (sub) =>
+      sub.students.first_name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      sub.students.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sub.students.student_id
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      sub.form_types.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sub.submission_number?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -59,8 +82,8 @@ export default function SubmissionsPage() {
         <h1 className="text-3xl font-bold text-gray-900">All Submissions</h1>
         <div className="relative w-64">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-          <Input 
-            placeholder="Search student or form..." 
+          <Input
+            placeholder="Search student or form..."
             className="pl-8"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -83,28 +106,44 @@ export default function SubmissionsPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">Loading...</TableCell>
+                <TableCell colSpan={6} className="text-center py-8">
+                  Loading...
+                </TableCell>
               </TableRow>
             ) : filteredSubmissions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">No submissions found.</TableCell>
+                <TableCell colSpan={6} className="text-center py-8">
+                  No submissions found.
+                </TableCell>
               </TableRow>
             ) : (
               filteredSubmissions.map((sub) => (
                 <TableRow key={sub.id}>
-                  <TableCell className="font-medium">{sub.submission_number}</TableCell>
+                  <TableCell className="font-medium">
+                    {sub.submission_number}
+                  </TableCell>
                   <TableCell>
                     {sub.students.first_name} {sub.students.last_name}
                     <br />
-                    <span className="text-xs text-gray-500">{sub.students.student_id}</span>
+                    <span className="text-xs text-gray-500">
+                      {sub.students.student_id}
+                    </span>
                   </TableCell>
                   <TableCell>{sub.form_types.name}</TableCell>
-                  <TableCell>{new Date(sub.submitted_at).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
-                      ${sub.status === 'approved' ? 'bg-green-100 text-green-800' : 
-                        sub.status === 'rejected' ? 'bg-red-100 text-red-800' : 
-                        'bg-yellow-100 text-yellow-800'}`}>
+                    {new Date(sub.submitted_at).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
+                      ${
+                        sub.status === "approved"
+                          ? "bg-green-100 text-green-800"
+                          : sub.status === "rejected"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
                       {sub.status}
                     </span>
                   </TableCell>
