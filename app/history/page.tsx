@@ -174,22 +174,22 @@ export default function HistoryPage() {
 
         {/* Table */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden overflow-x-auto">
-          <Table className="table-fixed min-w-[800px]">
+          <Table className="table-fixed min-w-[1000px]">
             <TableHeader>
               <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
-                <TableHead className="w-[220px] font-semibold text-gray-900">
+                <TableHead className="w-[200px] font-semibold text-gray-900">
                   Status
                 </TableHead>
-                <TableHead className="w-[30%] font-semibold text-gray-900">
+                <TableHead className="w-[250px] font-semibold text-gray-900">
                   Form Name
                 </TableHead>
-                <TableHead className="w-[20%] font-semibold text-gray-900">
+                <TableHead className="w-[180px] font-semibold text-gray-900">
                   Confirmation Number
                 </TableHead>
-                <TableHead className="w-[20%] font-semibold text-gray-900">
+                <TableHead className="w-[150px] font-semibold text-gray-900">
                   Submitted Date
                 </TableHead>
-                <TableHead className="text-right font-semibold text-gray-900">
+                <TableHead className="w-[200px] text-right font-semibold text-gray-900">
                   Actions
                 </TableHead>
               </TableRow>
