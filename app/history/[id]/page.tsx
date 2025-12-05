@@ -306,10 +306,10 @@ export default function FormDetailsPage() {
         {/* Action Buttons */}
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Link
-            href="/"
+            href="/history"
             className="flex items-center justify-center px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 font-medium hover:bg-gray-50 transition-colors shadow-sm"
           >
-            Back to Home
+            Back to Form History
           </Link>
           <a
             href={`/api/receipt?studentId=${

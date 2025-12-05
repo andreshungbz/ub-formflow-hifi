@@ -229,10 +229,20 @@ export default function HistoryPage() {
                             variant="outline"
                             size="sm"
                             className="gap-2 h-9 text-gray-500"
-                            disabled
+                            asChild
                           >
-                            <Download className="h-4 w-4" />
-                            Receipt
+                            <a
+                              href={`/api/receipt?studentId=${
+                                user?.id || "N/A"
+                              }&formName=${encodeURIComponent(
+                                sub.form_types?.name || "Form"
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Download className="h-4 w-4" />
+                              Receipt
+                            </a>
                           </Button>
                         </div>
                       </TableCell>
