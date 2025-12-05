@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Download, Check, Clock, Circle, AlertCircle } from "lucide-react";
+import { Download, Check, Clock, Circle, AlertCircle, X } from "lucide-react";
 
 // Define types for better type safety
 interface FormApproval {
@@ -234,7 +234,7 @@ export default function FormDetailsPage() {
                   bgColor = "bg-[#7c3090]"; // ub-purple
                   borderColor = "border-[#7c3090]";
                 } else if (step.status === "rejected") {
-                  Icon = Check; // Or X
+                  Icon = X;
                   iconColor = "text-white";
                   bgColor = "bg-red-500";
                   borderColor = "border-red-500";

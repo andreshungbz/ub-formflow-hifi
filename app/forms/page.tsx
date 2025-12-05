@@ -143,13 +143,7 @@ export default function FormsPage() {
               className="flex flex-col sm:flex-row sm:items-center justify-between rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md cursor-pointer group gap-4 sm:gap-0"
             >
               <div className="flex items-center gap-4">
-                <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-lg ${
-                    index % 2 === 0
-                      ? "bg-[#7c3090]/10 text-[#7c3090]"
-                      : "bg-[#fec630]/10 text-[#fec630]"
-                  }`}
-                >
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-[#7c3090]/10 text-[#7c3090]">
                   <FileText className="h-6 w-6" />
                 </div>
                 <div>
