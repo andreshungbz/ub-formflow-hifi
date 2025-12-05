@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -8,42 +8,42 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Link from "next/link";
-import { UserPlus } from "lucide-react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
-import { createClient } from "@/lib/supabase/client";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import Link from 'next/link';
+import { UserPlus } from 'lucide-react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { createClient } from '@/lib/supabase/client';
 
 export default function SignupPage() {
   const { signUp } = useAuth();
   const router = useRouter();
   const supabase = createClient();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setLoading(true);
 
     // Validate passwords match
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError('Passwords do not match.');
       setLoading(false);
       return;
     }
 
     // Validate password length
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+      setError('Password must be at least 6 characters long.');
       setLoading(false);
       return;
     }
@@ -52,7 +52,7 @@ export default function SignupPage() {
 
     if (signUpError) {
       setError(
-        signUpError.message || "Failed to create account. Please try again."
+        signUpError.message || 'Failed to create account. Please try again.'
       );
       setLoading(false);
       return;
@@ -65,11 +65,11 @@ export default function SignupPage() {
 
     if (currentUser) {
       // Success - redirect to profile creation
-      router.push("/profile/create");
+      router.push('/profile/create');
     } else {
       // If email confirmation is required, user might need to confirm first
       setError(
-        "Account created! Please check your email to confirm your account, then log in."
+        'Account created! Please check your email to confirm your account, then log in.'
       );
       setLoading(false);
     }
@@ -90,7 +90,9 @@ export default function SignupPage() {
         <CardContent>
           <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
             <div className="grid gap-1">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="mb-1">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -100,8 +102,8 @@ export default function SignupPage() {
                 required
                 className={
                   error
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                    : ""
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                    : ''
                 }
               />
             </div>
@@ -135,14 +137,14 @@ export default function SignupPage() {
             {error && <p className="text-red-600 text-sm">{error}</p>}
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating Account..." : "Create Account"}
+              {loading ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>
         </CardContent>
 
         <CardFooter className="flex flex-col gap-2">
           <p className="text-sm text-center text-muted-foreground">
-            Already have an account?{" "}
+            Already have an account?{' '}
             <Link
               href="/login"
               className="text-ub-purple underline hover:text-ub-purple/80 transition-colors"
