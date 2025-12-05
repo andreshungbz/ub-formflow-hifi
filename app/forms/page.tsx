@@ -20,7 +20,8 @@ interface FormType {
   id: string;
   name: string;
   description: string;
-  category: number | null;
+  category: number | string | null;
+  tags: string[] | null;
   template_file: string | null;
   downloadUrl?: string | null;
 }
@@ -66,28 +67,22 @@ export default function FormsPage() {
     fetchForms();
   }, [supabase]);
 
-  // Get unique categories from fetched forms
+  // Get unique tags from fetched forms
   const availableCategories = [
     "All Categories",
-    ...Array.from(
-      new Set(
-        forms.map((f) =>
-          f.category ? CATEGORY_MAP[f.category] || "Withdrawal" : "Withdrawal"
-        )
-      )
-    ),
+    ...Array.from(new Set(forms.flatMap((f) => f.tags || []))).sort(),
   ];
 
   const filteredForms = forms.filter((form) => {
-    const categoryName = form.category
-      ? CATEGORY_MAP[form.category] || "Withdrawal"
-      : "Withdrawal";
+    const formTags = form.tags || [];
     const matchesSearch =
       form.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (form.description &&
         form.description.toLowerCase().includes(searchQuery.toLowerCase()));
+
     const matchesCategory =
-      activeCategory === "All Categories" || categoryName === activeCategory;
+      activeCategory === "All Categories" || formTags.includes(activeCategory);
+
     return matchesSearch && matchesCategory;
   });
 
@@ -104,7 +99,7 @@ export default function FormsPage() {
   }
 
   return (
-    <div className="bg-[#f7f6fb] min-h-screen p-8">
+    <div className="bg-[#f7f6fb] min-h-screen p-4 sm:p-8">
       <div className="mx-auto max-w-5xl space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -145,7 +140,7 @@ export default function FormsPage() {
             <div
               key={form.id}
               onClick={() => handleCardClick(form.id)}
-              className="flex items-center justify-between rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md cursor-pointer group"
+              className="flex flex-col sm:flex-row sm:items-center justify-between rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md cursor-pointer group gap-4 sm:gap-0"
             >
               <div className="flex items-center gap-4">
                 <div
@@ -165,11 +160,11 @@ export default function FormsPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex w-full sm:w-auto gap-2">
                 {form.downloadUrl ? (
                   <Button
                     variant="outline"
-                    className="gap-2 z-10"
+                    className="gap-2 z-10 flex-1 sm:flex-none"
                     asChild
                     onClick={(e) => e.stopPropagation()} // Prevent card click when clicking download
                   >
@@ -186,7 +181,7 @@ export default function FormsPage() {
                   <Button
                     variant="ghost"
                     disabled
-                    className="gap-2 text-gray-400"
+                    className="gap-2 text-gray-400 flex-1 sm:flex-none"
                   >
                     <Download className="h-4 w-4" />
                     Unavailable
@@ -194,7 +189,7 @@ export default function FormsPage() {
                 )}
                 <Button
                   asChild
-                  className="bg-[#7c3090] text-white hover:bg-[#6c2780] gap-2 z-10"
+                  className="bg-[#7c3090] text-white hover:bg-[#6c2780] gap-2 z-10 flex-1 sm:flex-none"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Link href={`/forms/submit/${form.id}`}>Submit Form</Link>
