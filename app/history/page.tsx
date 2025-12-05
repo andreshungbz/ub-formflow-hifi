@@ -177,7 +177,7 @@ export default function HistoryPage() {
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
-                <TableHead className="w-[180px] font-semibold text-gray-900">
+                <TableHead className="w-[220px] font-semibold text-gray-900">
                   Status
                 </TableHead>
                 <TableHead className="w-[30%] font-semibold text-gray-900">
