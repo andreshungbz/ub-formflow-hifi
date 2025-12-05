@@ -111,7 +111,7 @@ export default function FormsPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search forms..."
-            className="pl-10 bg-gray-200 border-none shadow-none text-base h-12 placeholder:text-gray-500"
+            className="pl-10 bg-gray-50 border-none shadow-sm text-base h-12 placeholder:text-gray-400"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -123,7 +123,7 @@ export default function FormsPage() {
             <Button
               key={category}
               onClick={() => setActiveCategory(category)}
-              className={`rounded-full px-6 transition-colors ${
+              className={`rounded-md px-6 transition-colors ${
                 activeCategory === category
                   ? "bg-[#7c3090] text-white hover:bg-[#6c2780]"
                   : "bg-white text-black border border-gray-200 hover:bg-gray-50"
@@ -158,7 +158,8 @@ export default function FormsPage() {
                 {form.downloadUrl ? (
                   <Button
                     variant="outline"
-                    className="gap-2 z-10 flex-1 sm:flex-none"
+                    size="sm"
+                    className="gap-2 z-10 flex-1 sm:flex-none h-9"
                     asChild
                     onClick={(e) => e.stopPropagation()} // Prevent card click when clicking download
                   >
@@ -175,7 +176,8 @@ export default function FormsPage() {
                   <Button
                     variant="ghost"
                     disabled
-                    className="gap-2 text-gray-400 flex-1 sm:flex-none"
+                    size="sm"
+                    className="gap-2 text-gray-400 flex-1 sm:flex-none h-9"
                   >
                     <Download className="h-4 w-4" />
                     Unavailable
@@ -183,7 +185,8 @@ export default function FormsPage() {
                 )}
                 <Button
                   asChild
-                  className="bg-[#7c3090] text-white hover:bg-[#6c2780] gap-2 z-10 flex-1 sm:flex-none"
+                  size="sm"
+                  className="bg-[#7c3090] text-white hover:bg-[#6c2780] gap-2 z-10 flex-1 sm:flex-none h-9"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Link href={`/forms/submit/${form.id}`}>Submit Form</Link>
