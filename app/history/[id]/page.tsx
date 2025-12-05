@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Download, Check, Clock, Circle } from "lucide-react";
+import { Download, Check, Clock, Circle, AlertCircle } from "lucide-react";
 
 // Define types for better type safety
 interface FormApproval {
@@ -138,6 +138,7 @@ export default function FormDetailsPage() {
       description: `Submitted on ${new Date(
         submission.submitted_at
       ).toLocaleDateString()}`,
+      comment: null,
     },
     ...(submission.form_approvals || [])
       .sort((a, b) => a.sequence_order - b.sequence_order)
@@ -163,6 +164,7 @@ export default function FormDetailsPage() {
             : `Rejected on ${new Date(
                 approval.rejected_at!
               ).toLocaleDateString()}`,
+        comment: approval.comments,
       })),
     {
       title: "Sent to Records Office",
@@ -172,6 +174,7 @@ export default function FormDetailsPage() {
         submission.status === "approved"
           ? "Finalized and sent to records"
           : "Pending finalization",
+      comment: null,
     },
   ];
 
@@ -272,12 +275,54 @@ export default function FormDetailsPage() {
                       >
                         {step.description}
                       </p>
+                      {/* @ts-ignore */}
+                      {step.comment && (
+                        <div className="mt-2 bg-gray-50 p-3 rounded-lg border border-gray-100 text-sm text-gray-600 italic">
+                          "{step.comment}"
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
               })}
             </div>
           </div>
+        </div>
+
+        {/* Footer Warning */}
+        <div className="mt-8 bg-[#fcfaff] border border-[#f3e8ff] rounded-xl p-6 flex items-start gap-4">
+          <AlertCircle className="w-6 h-6 text-[#7c3090] flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="font-semibold text-gray-900">
+              Additional Action May Be Required
+            </h3>
+            <p className="text-gray-600 text-sm mt-1">
+              If additional information is needed, you will be notified via
+              email.
+            </p>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Link
+            href="/"
+            className="flex items-center justify-center px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 font-medium hover:bg-gray-50 transition-colors shadow-sm"
+          >
+            Back to Home
+          </Link>
+          <a
+            href={`/api/receipt?studentId=${
+              submission.students?.student_id || "N/A"
+            }&formName=${encodeURIComponent(
+              submission.form_types?.name || "Form"
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 font-medium hover:bg-gray-50 transition-colors shadow-sm"
+          >
+            View Receipt
+          </a>
         </div>
       </div>
     </div>
