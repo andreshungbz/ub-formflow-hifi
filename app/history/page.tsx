@@ -23,9 +23,25 @@ import {
   XCircle,
 } from "lucide-react";
 
+type FormType = {
+  name: string | null;
+};
+
+type Submission = {
+  id: string;
+  submission_number: string | null;
+  status: string;
+  submitted_at: string;
+  form_types: FormType | null;
+};
+
+type SubmissionQueryResult = Omit<Submission, "form_types"> & {
+  form_types: FormType | FormType[] | null;
+};
+
 export default function HistoryPage() {
   const { user, studentId } = useAuth();
-  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [supabase] = useState(() => createClient());
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,7 +69,14 @@ export default function HistoryPage() {
           .order("submitted_at", { ascending: false });
 
         if (error) throw error;
-        setSubmissions(data || []);
+        const typedData = (data as SubmissionQueryResult[]) ?? [];
+        const normalized = typedData.map((sub) => ({
+          ...sub,
+          form_types: Array.isArray(sub.form_types)
+            ? sub.form_types[0] ?? null
+            : sub.form_types ?? null,
+        }));
+        setSubmissions(normalized);
       } catch (error) {
         console.error("Error fetching submissions:", error);
       } finally {
@@ -228,7 +251,7 @@ export default function HistoryPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="gap-2 h-9 text-gray-500"
+                            className="gap-2 h-9 text-[#7c3090] border-[#7c3090]/30 hover:bg-[#7c3090]/10"
                             asChild
                           >
                             <a
