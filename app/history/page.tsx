@@ -180,13 +180,13 @@ export default function HistoryPage() {
                 <TableHead className="w-[180px] font-semibold text-gray-900">
                   Status
                 </TableHead>
-                <TableHead className="font-semibold text-gray-900">
+                <TableHead className="w-[30%] font-semibold text-gray-900">
                   Form Name
                 </TableHead>
-                <TableHead className="font-semibold text-gray-900">
+                <TableHead className="w-[20%] font-semibold text-gray-900">
                   Confirmation Number
                 </TableHead>
-                <TableHead className="font-semibold text-gray-900">
+                <TableHead className="w-[20%] font-semibold text-gray-900">
                   Submitted Date
                 </TableHead>
                 <TableHead className="text-right font-semibold text-gray-900">
