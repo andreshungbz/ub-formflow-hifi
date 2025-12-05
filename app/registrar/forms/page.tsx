@@ -25,6 +25,7 @@ interface FormType {
   requires_registrar_approval: boolean;
   requires_accounts_receivable_approval: boolean;
   template_file?: string;
+  deadline?: string;
 }
 
 export default function FormsManagementPage() {
@@ -41,6 +42,7 @@ export default function FormsManagementPage() {
     requires_dean_approval: false,
     requires_registrar_approval: true,
     requires_accounts_receivable_approval: false,
+    deadline: "",
   });
   const [templateFile, setTemplateFile] = useState<File | null>(null);
 
@@ -100,6 +102,7 @@ export default function FormsManagementPage() {
         requires_dean_approval: false,
         requires_registrar_approval: true,
         requires_accounts_receivable_approval: false,
+        deadline: "",
       });
       setTemplateFile(null);
       fetchForms();
@@ -155,6 +158,18 @@ export default function FormsManagementPage() {
                   value={newForm.description}
                   onChange={(e) =>
                     setNewForm({ ...newForm, description: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="deadline">Deadline (Optional)</Label>
+                <Input
+                  id="deadline"
+                  placeholder="e.g. September 30, 2025 or Rolling"
+                  value={newForm.deadline}
+                  onChange={(e) =>
+                    setNewForm({ ...newForm, deadline: e.target.value })
                   }
                 />
               </div>
@@ -289,6 +304,12 @@ export default function FormsManagementPage() {
                     <div className="text-sm text-gray-500 flex items-center gap-1 mt-1">
                       <Upload className="h-3 w-3" />
                       <span>Template available</span>
+                    </div>
+                  )}
+                  {form.deadline && (
+                    <div className="text-sm text-gray-500 flex items-center gap-1">
+                      <span className="font-medium">Deadline:</span>{" "}
+                      {form.deadline}
                     </div>
                   )}
                 </div>
