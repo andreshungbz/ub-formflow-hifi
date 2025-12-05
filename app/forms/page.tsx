@@ -100,7 +100,7 @@ export default function FormsPage() {
 
   return (
     <div className="bg-[#f7f6fb] min-h-screen p-4 sm:p-8">
-      <div className="mx-auto max-w-5xl space-y-8">
+      <div className="mx-auto max-w-6xl space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-black">All Forms</h1>
