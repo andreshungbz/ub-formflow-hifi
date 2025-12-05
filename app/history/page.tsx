@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 
 export default function HistoryPage() {
-  const { user } = useAuth();
+  const { user, studentId } = useAuth();
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [supabase] = useState(() => createClient());
@@ -233,7 +233,7 @@ export default function HistoryPage() {
                           >
                             <a
                               href={`/api/receipt?studentId=${
-                                user?.id || "N/A"
+                                studentId || "N/A"
                               }&formName=${encodeURIComponent(
                                 sub.form_types?.name || "Form"
                               )}`}
