@@ -3,11 +3,7 @@
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Search,
-  Download,
-  FileText,
-} from "lucide-react";
+import { Search, Download, FileText, Send } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -41,9 +37,9 @@ export default function FormsPage() {
     const fetchForms = async () => {
       try {
         const { data, error } = await supabase
-          .from('form_types')
-          .select('*')
-          .eq('is_active', true);
+          .from("form_types")
+          .select("*")
+          .eq("is_active", true);
 
         if (error) throw error;
 
@@ -51,9 +47,8 @@ export default function FormsPage() {
         const formsWithUrls = (data || []).map((form) => {
           let downloadUrl = null;
           if (form.template_file) {
-            const { data: publicData } = supabase
-              .storage
-              .from('form-attachments')
+            const { data: publicData } = supabase.storage
+              .from("form-attachments")
               .getPublicUrl(form.template_file);
             downloadUrl = publicData.publicUrl;
           }
@@ -62,7 +57,7 @@ export default function FormsPage() {
 
         setForms(formsWithUrls);
       } catch (error) {
-        console.error('Error fetching forms:', error);
+        console.error("Error fetching forms:", error);
       } finally {
         setLoading(false);
       }
@@ -72,13 +67,25 @@ export default function FormsPage() {
   }, [supabase]);
 
   // Get unique categories from fetched forms
-  const availableCategories = ["All Categories", ...Array.from(new Set(forms.map(f => f.category ? CATEGORY_MAP[f.category] || "Withdrawal" : "Withdrawal")))];
+  const availableCategories = [
+    "All Categories",
+    ...Array.from(
+      new Set(
+        forms.map((f) =>
+          f.category ? CATEGORY_MAP[f.category] || "Withdrawal" : "Withdrawal"
+        )
+      )
+    ),
+  ];
 
   const filteredForms = forms.filter((form) => {
-    const categoryName = form.category ? CATEGORY_MAP[form.category] || "Withdrawal" : "Withdrawal";
+    const categoryName = form.category
+      ? CATEGORY_MAP[form.category] || "Withdrawal"
+      : "Withdrawal";
     const matchesSearch =
       form.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (form.description && form.description.toLowerCase().includes(searchQuery.toLowerCase()));
+      (form.description &&
+        form.description.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesCategory =
       activeCategory === "All Categories" || categoryName === activeCategory;
     return matchesSearch && matchesCategory;
@@ -151,16 +158,18 @@ export default function FormsPage() {
                   <FileText className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 group-hover:text-[#7c3090] transition-colors">{form.name}</h3>
+                  <h3 className="font-semibold text-gray-900 group-hover:text-[#7c3090] transition-colors">
+                    {form.name}
+                  </h3>
                   <p className="text-sm text-gray-500">{form.description}</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 {form.downloadUrl ? (
-                  <Button 
-                    variant="outline" 
-                    className="gap-2 z-10" 
+                  <Button
+                    variant="outline"
+                    className="gap-2 z-10"
                     asChild
                     onClick={(e) => e.stopPropagation()} // Prevent card click when clicking download
                   >
@@ -174,11 +183,22 @@ export default function FormsPage() {
                     </Link>
                   </Button>
                 ) : (
-                  <Button variant="ghost" disabled className="gap-2 text-gray-400">
+                  <Button
+                    variant="ghost"
+                    disabled
+                    className="gap-2 text-gray-400"
+                  >
                     <Download className="h-4 w-4" />
                     Unavailable
                   </Button>
                 )}
+                <Button
+                  asChild
+                  className="bg-[#7c3090] text-white hover:bg-[#6c2780] gap-2 z-10"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Link href={`/forms/submit/${form.id}`}>Submit Form</Link>
+                </Button>
               </div>
             </div>
           ))}
