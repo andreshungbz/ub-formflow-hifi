@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Check, X } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Check, X } from 'lucide-react';
 
 interface SubmissionDetails {
   id: string;
@@ -43,7 +43,7 @@ export default function RegistrarAssessmentPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const submissionId = params.submissionId as string;
-  const approvalId = searchParams.get("approvalId");
+  const approvalId = searchParams.get('approvalId');
   const router = useRouter();
   const [supabase] = useState(() => createClient());
 
@@ -52,10 +52,10 @@ export default function RegistrarAssessmentPage() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
 
-  const [comments, setComments] = useState("");
-  const [rejectionReason, setRejectionReason] = useState("");
+  const [comments, setComments] = useState('');
+  const [rejectionReason, setRejectionReason] = useState('');
   const [signedFile, setSignedFile] = useState<File | null>(null);
-  const [action, setAction] = useState<"approve" | "reject" | null>(null);
+  const [action, setAction] = useState<'approve' | 'reject' | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -64,7 +64,7 @@ export default function RegistrarAssessmentPage() {
       try {
         // Fetch submission details
         const { data: subData, error: subError } = await supabase
-          .from("form_submissions")
+          .from('form_submissions')
           .select(
             `
             *,
@@ -72,7 +72,7 @@ export default function RegistrarAssessmentPage() {
             form_types (*)
           `
           )
-          .eq("id", submissionId)
+          .eq('id', submissionId)
           .single();
 
         if (subError) throw subError;
@@ -80,10 +80,10 @@ export default function RegistrarAssessmentPage() {
 
         // Fetch attachments - ONLY current versions
         const { data: attData, error: attError } = await supabase
-          .from("form_attachments")
-          .select("*")
-          .eq("form_submission_id", submissionId)
-          .eq("is_current_version", true);
+          .from('form_attachments')
+          .select('*')
+          .eq('form_submission_id', submissionId)
+          .eq('is_current_version', true);
 
         if (attError) throw attError;
 
@@ -91,7 +91,7 @@ export default function RegistrarAssessmentPage() {
         const attachmentsWithUrls = await Promise.all(
           (attData || []).map(async (file) => {
             const { data } = await supabase.storage
-              .from("form-attachments")
+              .from('form-attachments')
               .createSignedUrl(file.file_path, 3600);
             return {
               ...(file as SubmissionAttachment),
@@ -101,7 +101,7 @@ export default function RegistrarAssessmentPage() {
         );
         setAttachments(attachmentsWithUrls);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
@@ -118,29 +118,29 @@ export default function RegistrarAssessmentPage() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      if (!user) throw new Error('Not authenticated');
 
       // 1. Upload signed file if present
       if (signedFile) {
-        const fileExt = signedFile.name.split(".").pop();
+        const fileExt = signedFile.name.split('.').pop();
         const fileName = `${submissionId}/signed-registrar-${Date.now()}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
-          .from("form-attachments")
+          .from('form-attachments')
           .upload(fileName, signedFile);
 
         if (uploadError) throw uploadError;
 
         const { error: versionError } = await supabase
-          .from("form_attachments")
+          .from('form_attachments')
           .update({ is_current_version: false })
-          .eq("form_submission_id", submissionId)
-          .eq("is_current_version", true);
+          .eq('form_submission_id', submissionId)
+          .eq('is_current_version', true);
 
         if (versionError) throw versionError;
 
         // Add the signed file as a new current version
-        await supabase.from("form_attachments").insert({
+        await supabase.from('form_attachments').insert({
           form_submission_id: submissionId,
           file_name: `SIGNED (Registrar) - ${signedFile.name}`,
           file_path: fileName,
@@ -154,40 +154,40 @@ export default function RegistrarAssessmentPage() {
       // 2. Update approval record
       // This is where we "pace their id" (update staff_id to current user)
       const { error: approvalError } = await supabase
-        .from("form_approvals")
+        .from('form_approvals')
         .update({
-          status: "approved",
+          status: 'approved',
           approved_at: new Date().toISOString(),
           comments: comments,
           staff_id: user.id, // Assign the approval to the current registrar
         })
-        .eq("id", approvalId);
+        .eq('id', approvalId);
 
       if (approvalError) throw approvalError;
 
       // 3. Check if all approvals for this submission are now approved
       const { data: allApprovals } = await supabase
-        .from("form_approvals")
-        .select("status")
-        .eq("form_submission_id", submissionId);
+        .from('form_approvals')
+        .select('status')
+        .eq('form_submission_id', submissionId);
 
-      const allApproved = allApprovals?.every((a) => a.status === "approved");
+      const allApproved = allApprovals?.every((a) => a.status === 'approved');
 
       if (allApproved) {
         // Mark submission as approved
         await supabase
-          .from("form_submissions")
+          .from('form_submissions')
           .update({
-            status: "approved",
+            status: 'approved',
             completed_at: new Date().toISOString(),
           })
-          .eq("id", submissionId);
+          .eq('id', submissionId);
       }
 
-      router.push("/registrar");
+      router.push('/registrar');
     } catch (error) {
-      console.error("Error approving:", error);
-      alert("Failed to approve. See console.");
+      console.error('Error approving:', error);
+      alert('Failed to approve. See console.');
     } finally {
       setProcessing(false);
     }
@@ -195,7 +195,7 @@ export default function RegistrarAssessmentPage() {
 
   const handleReject = async () => {
     if (!approvalId || !rejectionReason) {
-      alert("Please provide a rejection reason.");
+      alert('Please provide a rejection reason.');
       return;
     }
     setProcessing(true);
@@ -207,28 +207,28 @@ export default function RegistrarAssessmentPage() {
 
       // 1. Update approval record
       await supabase
-        .from("form_approvals")
+        .from('form_approvals')
         .update({
-          status: "rejected",
+          status: 'rejected',
           rejected_at: new Date().toISOString(),
           rejection_reason: rejectionReason,
           staff_id: user?.id, // Also track who rejected it
         })
-        .eq("id", approvalId);
+        .eq('id', approvalId);
 
       // 2. Update submission status to rejected
       await supabase
-        .from("form_submissions")
+        .from('form_submissions')
         .update({
-          status: "rejected",
+          status: 'rejected',
           rejection_reason: rejectionReason,
           completed_at: new Date().toISOString(),
         })
-        .eq("id", submissionId);
+        .eq('id', submissionId);
 
-      router.push("/registrar");
+      router.push('/registrar');
     } catch (error) {
-      console.error("Error rejecting:", error);
+      console.error('Error rejecting:', error);
     } finally {
       setProcessing(false);
     }
@@ -332,13 +332,13 @@ export default function RegistrarAssessmentPage() {
         {!action ? (
           <div className="flex gap-4">
             <Button
-              onClick={() => setAction("approve")}
+              onClick={() => setAction('approve')}
               className="bg-green-600 hover:bg-green-700 text-white flex-1 py-6 text-lg"
             >
               <Check className="mr-2 h-5 w-5" /> Approve Application
             </Button>
             <Button
-              onClick={() => setAction("reject")}
+              onClick={() => setAction('reject')}
               variant="destructive"
               className="flex-1 py-6 text-lg"
             >
@@ -349,19 +349,21 @@ export default function RegistrarAssessmentPage() {
           <div className="animate-in fade-in slide-in-from-top-4 duration-300">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-md font-semibold">
-                {action === "approve"
-                  ? "Approve Application"
-                  : "Reject Application"}
+                {action === 'approve'
+                  ? 'Approve Application'
+                  : 'Reject Application'}
               </h3>
               <Button variant="ghost" size="sm" onClick={() => setAction(null)}>
                 Cancel
               </Button>
             </div>
 
-            {action === "approve" ? (
+            {action === 'approve' ? (
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="comments">Comments (Optional)</Label>
+                  <Label htmlFor="comments" className="mb-2">
+                    Comments (Optional)
+                  </Label>
                   <Textarea
                     id="comments"
                     placeholder="Add any comments for the student..."
@@ -393,9 +395,9 @@ export default function RegistrarAssessmentPage() {
                 <Button
                   onClick={handleApprove}
                   disabled={processing}
-                  className="w-full bg-green-600 hover:bg-green-700"
+                  className="w-full text-white bg-green-600 hover:bg-green-700"
                 >
-                  {processing ? "Processing..." : "Confirm Approval"}
+                  {processing ? 'Processing...' : 'Confirm Approval'}
                 </Button>
               </div>
             ) : (
@@ -418,7 +420,7 @@ export default function RegistrarAssessmentPage() {
                   variant="destructive"
                   className="w-full"
                 >
-                  {processing ? "Processing..." : "Confirm Rejection"}
+                  {processing ? 'Processing...' : 'Confirm Rejection'}
                 </Button>
               </div>
             )}
