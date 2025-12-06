@@ -15,6 +15,7 @@ interface FormApproval {
   approved_at: string | null;
   rejected_at: string | null;
   comments: string | null;
+  rejection_reason: string | null;
   staff?: {
     first_name: string;
     last_name: string;
@@ -81,6 +82,7 @@ export default function FormDetailsPage() {
               approved_at,
               rejected_at,
               comments,
+              rejection_reason,
               staff (
                 first_name,
                 last_name
@@ -130,6 +132,10 @@ export default function FormDetailsPage() {
   }
 
   // Construct timeline steps
+  const rejectedApproval = submission.form_approvals?.find(
+    (a) => a.status === "rejected"
+  );
+
   const steps = [
     {
       title: "Submitted",
@@ -142,37 +148,52 @@ export default function FormDetailsPage() {
     },
     ...(submission.form_approvals || [])
       .sort((a, b) => a.sequence_order - b.sequence_order)
-      .map((approval) => ({
-        title:
-          approval.approval_type
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (l) => l.toUpperCase()) + " Approval",
-        date: approval.approved_at || approval.rejected_at,
-        status:
-          approval.status === "approved"
-            ? "completed"
-            : approval.status === "rejected"
-            ? "rejected"
-            : "pending",
-        description:
-          approval.status === "pending"
-            ? "Currently in progress"
-            : approval.status === "approved"
-            ? `Approved on ${new Date(
-                approval.approved_at!
-              ).toLocaleDateString()}`
-            : `Rejected on ${new Date(
-                approval.rejected_at!
-              ).toLocaleDateString()}`,
-        comment: approval.comments,
-      })),
+      .map((approval) => {
+        const isSkipped =
+          rejectedApproval &&
+          approval.sequence_order > rejectedApproval.sequence_order;
+
+        let status = "pending";
+        if (approval.status === "approved") status = "completed";
+        else if (approval.status === "rejected") status = "rejected";
+        else if (isSkipped) status = "skipped";
+
+        let description = "Currently in progress";
+        if (status === "completed")
+          description = `Approved on ${new Date(
+            approval.approved_at!
+          ).toLocaleDateString()}`;
+        else if (status === "rejected")
+          description = `Rejected on ${new Date(
+            approval.rejected_at!
+          ).toLocaleDateString()}`;
+        else if (status === "skipped") description = "Cancelled";
+
+        return {
+          title:
+            approval.approval_type
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (l) => l.toUpperCase()) + " Approval",
+          date: approval.approved_at || approval.rejected_at,
+          status,
+          description,
+          comment: approval.comments || approval.rejection_reason,
+        };
+      }),
     {
       title: "Sent to Records Office",
       date: submission.completed_at,
-      status: submission.status === "approved" ? "completed" : "pending",
+      status:
+        submission.status === "approved"
+          ? "completed"
+          : rejectedApproval
+          ? "skipped"
+          : "pending",
       description:
         submission.status === "approved"
           ? "Finalized and sent to records"
+          : rejectedApproval
+          ? "Cancelled"
           : "Pending finalization",
       comment: null,
     },
@@ -238,6 +259,11 @@ export default function FormDetailsPage() {
                   iconColor = "text-white";
                   bgColor = "bg-red-500";
                   borderColor = "border-red-500";
+                } else if (step.status === "skipped") {
+                  Icon = Circle;
+                  iconColor = "text-gray-200";
+                  bgColor = "bg-gray-50";
+                  borderColor = "border-gray-100";
                 } else if (
                   index > 0 &&
                   steps[index - 1].status === "completed" &&
@@ -261,7 +287,13 @@ export default function FormDetailsPage() {
 
                     {/* Content */}
                     <div className="pt-1">
-                      <h3 className="font-semibold text-gray-900 text-lg">
+                      <h3
+                        className={`font-semibold text-lg ${
+                          step.status === "skipped"
+                            ? "text-gray-400"
+                            : "text-gray-900"
+                        }`}
+                      >
                         {step.title}
                       </h3>
                       <p
