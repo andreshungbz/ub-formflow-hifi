@@ -128,21 +128,19 @@ export default function LoginCard() {
             </div>
 
             <div className="grid gap-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <a
-                  href="#"
-                  className="text-sm underline-offset-4 hover:underline"
-                >
-                  Forgot password?
-                </a>
-              </div>
+              <Label htmlFor="password">Password</Label>
               <PasswordInput
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              <a
+                href="#"
+                className="inline w-fit self-end text-sm underline-offset-4 hover:underline"
+              >
+                Forgot password?
+              </a>
             </div>
 
             {error && <p className="text-red-600 text-sm">{error}</p>}
