@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Download, FileText, Send } from "lucide-react";
+import { Search, Download, FileText, Send, Calendar } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -24,6 +24,7 @@ interface FormType {
   tags: string[] | null;
   template_file: string | null;
   downloadUrl?: string | null;
+  deadline: string | null;
 }
 
 export default function FormsPage() {
@@ -140,17 +141,35 @@ export default function FormsPage() {
             <div
               key={form.id}
               onClick={() => handleCardClick(form.id)}
-              className="flex flex-col sm:flex-row sm:items-center justify-between rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md cursor-pointer group gap-4 sm:gap-0"
+              className="flex flex-col sm:flex-row sm:items-center justify-between rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-shadow hover:shadow-md cursor-pointer group gap-4 sm:gap-6"
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-1">
                 <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-[#7c3090]/10 text-[#7c3090]">
                   <FileText className="h-6 w-6" />
                 </div>
-                <div>
+                <div className="flex flex-col">
                   <h3 className="font-semibold text-gray-900 group-hover:text-[#7c3090] transition-colors">
                     {form.name}
                   </h3>
-                  <p className="text-sm text-gray-500">{form.description}</p>
+                  <div className="text-sm text-gray-500 space-y-1">
+                    <p>{form.description}</p>
+                    {form.deadline && (
+                      <div className="flex items-center gap-2 text-[#6f6c80] pt-1">
+                        <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span className="text-xs">
+                          Due:{" "}
+                          {new Date(form.deadline).toLocaleDateString(
+                            undefined,
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            }
+                          )}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
