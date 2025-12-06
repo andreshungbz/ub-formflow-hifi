@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,35 +8,36 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import Link from 'next/link';
-import { User } from 'lucide-react';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { createClient } from '@/lib/supabase/client';
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
+import { Label } from "@/components/ui/label";
+import Link from "next/link";
+import { User } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginCard() {
   const { login } = useAuth();
   const router = useRouter();
   const supabase = createClient();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     const { error: authError } = await login(email, password);
 
     if (authError) {
-      setError(authError.message || 'Invalid email or password.');
+      setError(authError.message || "Invalid email or password.");
       setLoading(false);
       return;
     }
@@ -49,48 +50,48 @@ export default function LoginCard() {
     if (currentUser) {
       // 1. Check if user has a student profile
       const { data: studentProfile } = await supabase
-        .from('students')
-        .select('id')
-        .eq('id', currentUser.id)
+        .from("students")
+        .select("id")
+        .eq("id", currentUser.id)
         .single();
 
       if (studentProfile) {
-        setTimeout(() => router.push('/'), 800);
+        setTimeout(() => router.push("/"), 800);
         setLoading(false);
         return;
       }
 
       // 2. If no student profile, check if user has a staff profile
       const { data: staffProfile } = await supabase
-        .from('staff')
-        .select('id, role')
-        .eq('id', currentUser.id)
+        .from("staff")
+        .select("id, role")
+        .eq("id", currentUser.id)
         .single();
 
       if (staffProfile) {
         const roleData = staffProfile.role.toLowerCase();
 
-        if (roleData === 'registrar') {
-          router.push('/registrar');
-        } else if (roleData === 'dean') {
-          router.push('/dean');
-        } else if (roleData === 'teacher') {
-          router.push('/teacher');
-        } else if (roleData === 'accounts_receivable') {
-          router.push('/accounts');
-        } else if (roleData === 'student') {
-          router.push('/history');
+        if (roleData === "registrar") {
+          router.push("/registrar");
+        } else if (roleData === "dean") {
+          router.push("/dean");
+        } else if (roleData === "teacher") {
+          router.push("/teacher");
+        } else if (roleData === "accounts_receivable") {
+          router.push("/accounts");
+        } else if (roleData === "student") {
+          router.push("/history");
         } else {
-          router.push('/');
+          router.push("/");
         }
         setLoading(false);
         return;
       }
 
       // 3. If neither, redirect to create profile
-      router.push('/profile/create');
+      router.push("/profile/create");
     } else {
-      setError('Login successful but user data not found. Please try again.');
+      setError("Login successful but user data not found. Please try again.");
     }
     setLoading(false);
   };
@@ -115,14 +116,13 @@ export default function LoginCard() {
               <Input
                 id="email"
                 type="email"
-                placeholder="your.email@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className={
                   error
-                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                    : ''
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    : ""
                 }
               />
             </div>
@@ -137,10 +137,8 @@ export default function LoginCard() {
                   Forgot password?
                 </a>
               </div>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
-                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -150,14 +148,14 @@ export default function LoginCard() {
             {error && <p className="text-red-600 text-sm">{error}</p>}
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? "Logging in..." : "Login"}
             </Button>
           </form>
         </CardContent>
 
         <CardFooter className="flex flex-col gap-2">
           <p className="text-sm text-center text-muted-foreground">
-            Don&apos;t have an account?{' '}
+            Don&apos;t have an account?{" "}
             <Link
               href="/signup"
               className="text-ub-purple underline hover:text-ub-purple/80 transition-colors"
