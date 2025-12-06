@@ -13,6 +13,12 @@ import { useAuth } from '@/context/AuthContext';
 export default function Header() {
   const { user, studentId, role, logout } = useAuth();
   const isStudent = role === 'student';
+  const emailPrefix = user?.email?.split('@')[0];
+  const logoutLabel = isStudent && studentId
+    ? `${studentId} (Logout)`
+    : emailPrefix
+      ? `${emailPrefix} (Logout)`
+      : 'Logout';
 
   return (
     <header className="w-full flex flex-col sm:flex-row items-center px-4 py-3 gap-4 bg-ub-purple">
@@ -75,7 +81,7 @@ export default function Header() {
             ) : (
               <NavigationMenuItem>
                 <Button variant="default" onClick={logout}>
-                  {isStudent && studentId ? `${studentId} (Logout)` : 'Logout'}
+                  {logoutLabel}
                 </Button>
               </NavigationMenuItem>
             )}
