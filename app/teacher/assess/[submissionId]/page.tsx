@@ -1,20 +1,20 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Check, X } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Check, X } from 'lucide-react';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 
 interface SubmissionDetails {
   id: string;
@@ -62,7 +62,7 @@ export default function AssessmentPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const submissionId = params.submissionId as string;
-  const approvalId = searchParams.get("approvalId");
+  const approvalId = searchParams.get('approvalId');
   const router = useRouter();
   const [supabase] = useState(() => createClient());
 
@@ -71,15 +71,15 @@ export default function AssessmentPage() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
 
-  const [comments, setComments] = useState("");
-  const [rejectionReason, setRejectionReason] = useState("");
+  const [comments, setComments] = useState('');
+  const [rejectionReason, setRejectionReason] = useState('');
   const [signedFile, setSignedFile] = useState<File | null>(null);
-  const [action, setAction] = useState<"approve" | "reject" | null>(null);
+  const [action, setAction] = useState<'approve' | 'reject' | null>(null);
 
   // New state for Dean selection
   const [nextApproval, setNextApproval] = useState<ApprovalRecord | null>(null);
   const [deans, setDeans] = useState<DeanProfile[]>([]);
-  const [selectedDeanId, setSelectedDeanId] = useState<string>("");
+  const [selectedDeanId, setSelectedDeanId] = useState<string>('');
   const [loadingDeans, setLoadingDeans] = useState(false);
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function AssessmentPage() {
       try {
         // Fetch submission details
         const { data: subData, error: subError } = await supabase
-          .from("form_submissions")
+          .from('form_submissions')
           .select(
             `
             *,
@@ -97,7 +97,7 @@ export default function AssessmentPage() {
             form_types (*)
           `
           )
-          .eq("id", submissionId)
+          .eq('id', submissionId)
           .single();
 
         if (subError) throw subError;
@@ -105,10 +105,10 @@ export default function AssessmentPage() {
 
         // Fetch attachments
         const { data: attData, error: attError } = await supabase
-          .from("form_attachments")
-          .select("*")
-          .eq("form_submission_id", submissionId)
-          .eq("is_current_version", true);
+          .from('form_attachments')
+          .select('*')
+          .eq('form_submission_id', submissionId)
+          .eq('is_current_version', true);
 
         if (attError) throw attError;
 
@@ -116,7 +116,7 @@ export default function AssessmentPage() {
         const attachmentsWithUrls = await Promise.all(
           ((attData || []) as AttachmentRecord[]).map(async (file) => {
             const { data } = await supabase.storage
-              .from("form-attachments")
+              .from('form-attachments')
               .createSignedUrl(file.file_path, 3600);
             return { ...file, signedUrl: data?.signedUrl } as AttachmentWithUrl;
           })
@@ -127,22 +127,22 @@ export default function AssessmentPage() {
         if (approvalId) {
           const { data: currentApproval, error: currentApprovalError } =
             await supabase
-              .from("form_approvals")
-              .select("*")
-              .eq("id", approvalId)
+              .from('form_approvals')
+              .select('*')
+              .eq('id', approvalId)
               .single();
 
           if (currentApprovalError) throw currentApprovalError;
 
           // Find next approval
           const { data: nextApp, error: nextAppError } = await supabase
-            .from("form_approvals")
-            .select("*")
-            .eq("form_submission_id", submissionId)
-            .eq("sequence_order", currentApproval.sequence_order + 1)
+            .from('form_approvals')
+            .select('*')
+            .eq('form_submission_id', submissionId)
+            .eq('sequence_order', currentApproval.sequence_order + 1)
             .single();
 
-          if (nextAppError && nextAppError.code !== "PGRST116") {
+          if (nextAppError && nextAppError.code !== 'PGRST116') {
             throw nextAppError;
           }
 
@@ -151,16 +151,16 @@ export default function AssessmentPage() {
             setNextApproval(nextApp as ApprovalRecord);
 
             // If next is dean, fetch deans
-            if (nextApp.approval_type === "dean") {
+            if (nextApp.approval_type === 'dean') {
               setLoadingDeans(true);
               const { data: deansData, error: deansError } = await supabase
-                .from("staff")
-                .select("id, first_name, last_name, department")
-                .ilike("role", "%dean%")
-                .eq("is_active", true);
+                .from('staff')
+                .select('id, first_name, last_name, department')
+                .ilike('role', '%dean%')
+                .eq('is_active', true);
 
               if (deansError) {
-                console.error("Error fetching deans:", deansError);
+                console.error('Error fetching deans:', deansError);
               } else {
                 setDeans((deansData || []) as DeanProfile[]);
               }
@@ -169,7 +169,7 @@ export default function AssessmentPage() {
           }
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
@@ -182,8 +182,8 @@ export default function AssessmentPage() {
     if (!approvalId) return;
 
     // Validate dean selection if required
-    if (nextApproval?.approval_type === "dean" && !selectedDeanId) {
-      alert("Please select a Dean for the next approval step.");
+    if (nextApproval?.approval_type === 'dean' && !selectedDeanId) {
+      alert('Please select a Dean for the next approval step.');
       return;
     }
 
@@ -192,21 +192,21 @@ export default function AssessmentPage() {
     try {
       // 1. Upload signed file if present
       if (signedFile) {
-        const fileExt = signedFile.name.split(".").pop();
+        const fileExt = signedFile.name.split('.').pop();
         const fileName = fileExt
           ? `${submissionId}/signed-${Date.now()}.${fileExt}`
           : `${submissionId}/signed-${Date.now()}`;
 
         const { error: uploadError } = await supabase.storage
-          .from("form-attachments")
+          .from('form-attachments')
           .upload(fileName, signedFile);
 
         if (uploadError) throw uploadError;
         const { error: versionError } = await supabase
-          .from("form_attachments")
+          .from('form_attachments')
           .update({ is_current_version: false })
-          .eq("form_submission_id", submissionId)
-          .eq("is_current_version", true);
+          .eq('form_submission_id', submissionId)
+          .eq('is_current_version', true);
 
         if (versionError) throw versionError;
 
@@ -217,7 +217,7 @@ export default function AssessmentPage() {
 
         const { data: userData } = await supabase.auth.getUser();
 
-        await supabase.from("form_attachments").insert({
+        await supabase.from('form_attachments').insert({
           form_submission_id: submissionId,
           file_name: `SIGNED - ${signedFile.name}`,
           file_path: fileName,
@@ -230,22 +230,22 @@ export default function AssessmentPage() {
 
       // 2. Update approval record
       const { error: approvalError } = await supabase
-        .from("form_approvals")
+        .from('form_approvals')
         .update({
-          status: "approved",
+          status: 'approved',
           approved_at: new Date().toISOString(),
           comments: comments,
         })
-        .eq("id", approvalId);
+        .eq('id', approvalId);
 
       if (approvalError) throw approvalError;
 
       // 3. Assign next approver if needed
-      if (nextApproval?.approval_type === "dean" && selectedDeanId) {
+      if (nextApproval?.approval_type === 'dean' && selectedDeanId) {
         const { error: assignError } = await supabase
-          .from("form_approvals")
+          .from('form_approvals')
           .update({ staff_id: selectedDeanId })
-          .eq("id", nextApproval.id);
+          .eq('id', nextApproval.id);
 
         if (assignError) throw assignError;
       }
@@ -253,10 +253,10 @@ export default function AssessmentPage() {
       // 4. Check if all approvals are done (optional, or handle via trigger/backend logic)
       // For now, we just approve this step.
 
-      router.push("/teacher");
+      router.push('/teacher');
     } catch (error) {
-      console.error("Error approving:", error);
-      alert("Failed to approve. See console.");
+      console.error('Error approving:', error);
+      alert('Failed to approve. See console.');
     } finally {
       setProcessing(false);
     }
@@ -264,7 +264,7 @@ export default function AssessmentPage() {
 
   const handleReject = async () => {
     if (!approvalId || !rejectionReason) {
-      alert("Please provide a rejection reason.");
+      alert('Please provide a rejection reason.');
       return;
     }
     setProcessing(true);
@@ -272,27 +272,27 @@ export default function AssessmentPage() {
     try {
       // 1. Update approval record
       await supabase
-        .from("form_approvals")
+        .from('form_approvals')
         .update({
-          status: "rejected",
+          status: 'rejected',
           rejected_at: new Date().toISOString(),
           rejection_reason: rejectionReason,
         })
-        .eq("id", approvalId);
+        .eq('id', approvalId);
 
       // 2. Update submission status to rejected
       await supabase
-        .from("form_submissions")
+        .from('form_submissions')
         .update({
-          status: "rejected",
+          status: 'rejected',
           rejection_reason: rejectionReason,
           completed_at: new Date().toISOString(),
         })
-        .eq("id", submissionId);
+        .eq('id', submissionId);
 
-      router.push("/teacher");
+      router.push('/teacher');
     } catch (error) {
-      console.error("Error rejecting:", error);
+      console.error('Error rejecting:', error);
     } finally {
       setProcessing(false);
     }
@@ -396,13 +396,13 @@ export default function AssessmentPage() {
         {!action ? (
           <div className="flex gap-4">
             <Button
-              onClick={() => setAction("approve")}
+              onClick={() => setAction('approve')}
               className="bg-green-600 hover:bg-green-700 text-white flex-1 py-6 text-lg"
             >
               <Check className="mr-2 h-5 w-5" /> Approve Application
             </Button>
             <Button
-              onClick={() => setAction("reject")}
+              onClick={() => setAction('reject')}
               variant="destructive"
               className="flex-1 py-6 text-lg"
             >
@@ -413,25 +413,25 @@ export default function AssessmentPage() {
           <div className="animate-in fade-in slide-in-from-top-4 duration-300">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-md font-semibold">
-                {action === "approve"
-                  ? "Approve Application"
-                  : "Reject Application"}
+                {action === 'approve'
+                  ? 'Approve Application'
+                  : 'Reject Application'}
               </h3>
               <Button variant="ghost" size="sm" onClick={() => setAction(null)}>
                 Cancel
               </Button>
             </div>
 
-            {action === "approve" ? (
+            {action === 'approve' ? (
               <div className="space-y-4">
                 {/* Dean Selection (Conditional) */}
-                {nextApproval?.approval_type === "dean" && (
+                {nextApproval?.approval_type === 'dean' && (
                   <div className="bg-purple-50 p-4 rounded-md border border-purple-100">
                     <Label
                       htmlFor="dean-select"
                       className="block mb-2 font-medium text-purple-900"
                     >
-                      Select Dean for Next Approval{" "}
+                      Select Dean for Next Approval{' '}
                       <span className="text-red-500">*</span>
                     </Label>
                     <Select
@@ -442,15 +442,15 @@ export default function AssessmentPage() {
                       <SelectTrigger id="dean-select" className="bg-white">
                         <SelectValue
                           placeholder={
-                            loadingDeans ? "Loading deans..." : "Select a Dean"
+                            loadingDeans ? 'Loading deans...' : 'Select a Dean'
                           }
                         />
                       </SelectTrigger>
                       <SelectContent>
                         {deans.map((dean) => (
                           <SelectItem key={dean.id} value={dean.id}>
-                            {dean.first_name} {dean.last_name}{" "}
-                            {dean.department ? `(${dean.department})` : ""}
+                            {dean.first_name} {dean.last_name}{' '}
+                            {dean.department ? `(${dean.department})` : ''}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -463,7 +463,9 @@ export default function AssessmentPage() {
                 )}
 
                 <div>
-                  <Label htmlFor="comments">Comments (Optional)</Label>
+                  <Label htmlFor="comments" className="mb-2">
+                    Comments (Optional)
+                  </Label>
                   <Textarea
                     id="comments"
                     placeholder="Add any comments for the student..."
@@ -495,9 +497,9 @@ export default function AssessmentPage() {
                 <Button
                   onClick={handleApprove}
                   disabled={processing}
-                  className="w-full bg-green-600 hover:bg-green-700"
+                  className="w-full text-white bg-green-600 hover:bg-green-700"
                 >
-                  {processing ? "Processing..." : "Confirm Approval"}
+                  {processing ? 'Processing...' : 'Confirm Approval'}
                 </Button>
               </div>
             ) : (
@@ -520,7 +522,7 @@ export default function AssessmentPage() {
                   variant="destructive"
                   className="w-full"
                 >
-                  {processing ? "Processing..." : "Confirm Rejection"}
+                  {processing ? 'Processing...' : 'Confirm Rejection'}
                 </Button>
               </div>
             )}
