@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -8,21 +8,21 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
-import { createClient } from "@/lib/supabase/client";
-import { UserPlus } from "lucide-react";
+} from '@/components/ui/select';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { createClient } from '@/lib/supabase/client';
+import { UserPlus } from 'lucide-react';
 
 interface Department {
   id: number;
@@ -36,28 +36,28 @@ export default function CreateProfilePage() {
 
   const [departments, setDepartments] = useState<Department[]>([]);
   const [formData, setFormData] = useState({
-    student_id: "",
-    first_name: "",
-    last_name: "",
-    phone: "",
-    program_code: "",
-    program_name: "",
+    student_id: '',
+    first_name: '',
+    last_name: '',
+    phone: '',
+    program_code: '',
+    program_name: '',
   });
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push("/login");
+      router.push('/login');
     }
   }, [user, authLoading, router]);
 
   useEffect(() => {
     const fetchDepartments = async () => {
       const { data, error } = await supabase
-        .from("department")
-        .select("*")
-        .order("name", { ascending: true });
+        .from('department')
+        .select('*')
+        .order('name', { ascending: true });
 
       if (data && !error) {
         setDepartments(data);
@@ -78,31 +78,31 @@ export default function CreateProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setSubmitting(true);
 
     if (!user) {
-      setError("You must be logged in to create a profile.");
+      setError('You must be logged in to create a profile.');
       setSubmitting(false);
       return;
     }
 
     // Validate required fields
     if (!formData.student_id || !formData.first_name || !formData.last_name) {
-      setError("Please fill in all required fields.");
+      setError('Please fill in all required fields.');
       setSubmitting(false);
       return;
     }
 
     // Validate student_id format
     if (!/^\d+$/.test(formData.student_id)) {
-      setError("Student ID must contain only numbers.");
+      setError('Student ID must contain only numbers.');
       setSubmitting(false);
       return;
     }
 
     if (formData.student_id.length !== 10) {
-      setError("Student ID must be exactly 10 digits.");
+      setError('Student ID must be exactly 10 digits.');
       setSubmitting(false);
       return;
     }
@@ -110,19 +110,19 @@ export default function CreateProfilePage() {
     try {
       // Create user profile with role 'student'
       const { error: profileError } = await supabase
-        .from("user_profiles")
+        .from('user_profiles')
         .insert({
           id: user.id,
-          role: "student",
+          role: 'student',
         });
 
-      if (profileError && profileError.code !== "23505") {
+      if (profileError && profileError.code !== '23505') {
         // 23505 is unique violation, which is fine if profile already exists
         throw profileError;
       }
 
       // Create student profile
-      const { error: studentError } = await supabase.from("students").insert({
+      const { error: studentError } = await supabase.from('students').insert({
         id: user.id,
         student_id: formData.student_id,
         first_name: formData.first_name,
@@ -130,7 +130,7 @@ export default function CreateProfilePage() {
         phone: formData.phone || null,
         program_code: formData.program_code || null,
         program_name: formData.program_name || null,
-        enrollment_status: "active",
+        enrollment_status: 'active',
       });
 
       if (studentError) {
@@ -138,12 +138,12 @@ export default function CreateProfilePage() {
       }
 
       // Success - redirect to home
-      router.push("/");
+      router.push('/');
     } catch (err) {
       if (err instanceof Error) {
-        setError(err.message || "Failed to create profile. Please try again.");
+        setError(err.message || 'Failed to create profile. Please try again.');
       } else {
-        setError("Failed to create profile. Please try again.");
+        setError('Failed to create profile. Please try again.');
       }
       setSubmitting(false);
     }
@@ -175,7 +175,7 @@ export default function CreateProfilePage() {
         <CardContent>
           <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
             <div className="grid gap-1">
-              <Label htmlFor="student_id">
+              <Label htmlFor="student_id" className="mb-1">
                 Student ID <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -189,14 +189,14 @@ export default function CreateProfilePage() {
                 maxLength={10}
                 className={
                   error && !formData.student_id
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                    : ""
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                    : ''
                 }
               />
             </div>
 
             <div className="grid gap-1">
-              <Label htmlFor="first_name">
+              <Label htmlFor="first_name" className="mb-1">
                 First Name <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -209,14 +209,14 @@ export default function CreateProfilePage() {
                 required
                 className={
                   error && !formData.first_name
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                    : ""
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                    : ''
                 }
               />
             </div>
 
             <div className="grid gap-1">
-              <Label htmlFor="last_name">
+              <Label htmlFor="last_name" className="mb-1">
                 Last Name <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -229,14 +229,16 @@ export default function CreateProfilePage() {
                 required
                 className={
                   error && !formData.last_name
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                    : ""
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                    : ''
                 }
               />
             </div>
 
             <div className="grid gap-1">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone" className="mb-1">
+                Phone
+              </Label>
               <Input
                 id="phone"
                 name="phone"
@@ -248,7 +250,9 @@ export default function CreateProfilePage() {
             </div>
 
             <div className="grid gap-1">
-              <Label htmlFor="program_code">Program Code</Label>
+              <Label htmlFor="program_code" className="mb-1">
+                Program Code
+              </Label>
               <Input
                 id="program_code"
                 name="program_code"
@@ -260,7 +264,9 @@ export default function CreateProfilePage() {
             </div>
 
             <div className="grid gap-1">
-              <Label htmlFor="program_name">Program/Department</Label>
+              <Label htmlFor="program_name" className="mb-1">
+                Program/Department
+              </Label>
               <Select
                 value={formData.program_name}
                 onValueChange={handleProgramChange}
@@ -281,7 +287,7 @@ export default function CreateProfilePage() {
             {error && <p className="text-red-600 text-sm">{error}</p>}
 
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? "Creating Profile..." : "Create Profile"}
+              {submitting ? 'Creating Profile...' : 'Create Profile'}
             </Button>
           </form>
         </CardContent>
