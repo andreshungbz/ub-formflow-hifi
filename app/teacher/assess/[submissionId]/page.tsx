@@ -505,7 +505,7 @@ export default function AssessmentPage() {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="reason" className="text-red-700">
+                  <Label htmlFor="reason" className="text-red-700 mb-2">
                     Rejection Reason (Required)
                   </Label>
                   <Textarea

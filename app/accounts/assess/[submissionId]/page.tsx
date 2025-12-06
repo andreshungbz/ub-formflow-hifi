@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Clock, FileText, Check, X } from 'lucide-react';
+import { FileText, Check, X } from 'lucide-react';
 
 export default function AccountsAssessmentPage() {
   const params = useParams();
@@ -35,11 +35,13 @@ export default function AccountsAssessmentPage() {
         // Fetch submission details
         const { data: subData, error: subError } = await supabase
           .from('form_submissions')
-          .select(`
+          .select(
+            `
             *,
             students (*),
             form_types (*)
-          `)
+          `
+          )
           .eq('id', submissionId)
           .single();
 
@@ -70,15 +72,13 @@ export default function AccountsAssessmentPage() {
         // Generate signed URLs
         const attachmentsWithUrls = await Promise.all(
           (attData || []).map(async (file) => {
-            const { data } = await supabase
-              .storage
+            const { data } = await supabase.storage
               .from('form-attachments')
               .createSignedUrl(file.file_path, 3600);
             return { ...file, signedUrl: data?.signedUrl };
           })
         );
         setAttachments(attachmentsWithUrls);
-
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -98,13 +98,13 @@ export default function AccountsAssessmentPage() {
       if (signedFile) {
         const fileExt = signedFile.name.split('.').pop();
         const fileName = `${submissionId}/signed-${Date.now()}.${fileExt}`;
-        
+
         const { error: uploadError } = await supabase.storage
           .from('form-attachments')
           .upload(fileName, signedFile);
 
         if (uploadError) throw uploadError;
-        
+
         const { error: versionError } = await supabase
           .from('form_attachments')
           .update({ is_current_version: false })
@@ -120,7 +120,7 @@ export default function AccountsAssessmentPage() {
           file_size: signedFile.size,
           file_type: signedFile.type,
           is_current_version: true,
-          uploaded_by: user?.id
+          uploaded_by: user?.id,
         });
       }
 
@@ -131,7 +131,7 @@ export default function AccountsAssessmentPage() {
           status: 'approved',
           approved_at: new Date().toISOString(),
           comments: comments,
-          staff_id: user?.id
+          staff_id: user?.id,
         })
         .eq('id', approvalId);
 
@@ -143,15 +143,15 @@ export default function AccountsAssessmentPage() {
         .select('status')
         .eq('form_submission_id', submissionId);
 
-      const allApproved = allApprovals?.every(a => a.status === 'approved');
-      
+      const allApproved = allApprovals?.every((a) => a.status === 'approved');
+
       if (allApproved) {
         // Mark submission as approved
         await supabase
           .from('form_submissions')
-          .update({ 
+          .update({
             status: 'approved',
-            completed_at: new Date().toISOString()
+            completed_at: new Date().toISOString(),
           })
           .eq('id', submissionId);
       }
@@ -179,7 +179,7 @@ export default function AccountsAssessmentPage() {
           status: 'rejected',
           approved_at: new Date().toISOString(),
           comments: rejectionReason,
-          staff_id: user?.id
+          staff_id: user?.id,
         })
         .eq('id', approvalId);
 
@@ -202,7 +202,8 @@ export default function AccountsAssessmentPage() {
   };
 
   if (loading) return <div className="p-8 text-center">Loading...</div>;
-  if (!submission) return <div className="p-8 text-center">Submission not found</div>;
+  if (!submission)
+    return <div className="p-8 text-center">Submission not found</div>;
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4">
@@ -211,7 +212,8 @@ export default function AccountsAssessmentPage() {
           Assessment: {submission.form_types.name}
         </h1>
         <p className="text-gray-600">
-          Student: {submission.students.first_name} {submission.students.last_name} ({submission.students.student_id})
+          Student: {submission.students.first_name}{' '}
+          {submission.students.last_name} ({submission.students.student_id})
         </p>
       </div>
 
@@ -227,14 +229,23 @@ export default function AccountsAssessmentPage() {
               ) : (
                 <div className="space-y-3">
                   {attachments.map((file) => (
-                    <div key={file.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div
+                      key={file.id}
+                      className="flex justify-between items-center p-3 bg-gray-50 rounded"
+                    >
                       <div className="flex items-center gap-2">
                         <FileText className="h-5 w-5 text-gray-400" />
-                        <span className="text-sm font-medium">{file.file_name}</span>
+                        <span className="text-sm font-medium">
+                          {file.file_name}
+                        </span>
                       </div>
                       {file.signedUrl && (
                         <Button asChild size="sm" variant="outline">
-                          <a href={file.signedUrl} target="_blank" rel="noopener noreferrer">
+                          <a
+                            href={file.signedUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             View
                           </a>
                         </Button>
@@ -282,7 +293,7 @@ export default function AccountsAssessmentPage() {
               <Button
                 onClick={handleApprove}
                 disabled={processing || !approvalId}
-                className="w-full bg-green-600 hover:bg-green-700"
+                className="w-full text-white bg-green-600 hover:bg-green-700"
               >
                 <Check className="mr-2 h-4 w-4" />
                 {processing ? 'Processing...' : 'Approve'}
@@ -296,7 +307,9 @@ export default function AccountsAssessmentPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <Label htmlFor="rejection-reason">Reason for Rejection</Label>
+                <Label htmlFor="rejection-reason" className="mb-2">
+                  Reason for Rejection
+                </Label>
                 <Textarea
                   id="rejection-reason"
                   placeholder="Explain why this is being rejected..."
