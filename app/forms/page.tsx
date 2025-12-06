@@ -30,12 +30,19 @@ export default function FormsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All Categories");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
   const [supabase] = useState(() => createClient());
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Check Session
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        setIsLoggedIn(!!session);
+
         // Fetch Forms
         const { data: formData, error: formError } = await supabase
           .from("form_types")
@@ -60,12 +67,19 @@ export default function FormsPage() {
 
         // Fetch Categories
         const { data: categoryData, error: categoryError } = await supabase
-          .from("categories")
+          .from("form_categories")
           .select("*")
           .order("id");
 
-        if (categoryError) throw categoryError;
-        setCategories(categoryData || []);
+        if (categoryError) {
+          console.warn(
+            "Could not fetch categories, falling back to all:",
+            categoryError
+          );
+          // Fallback or empty is fine, handled by default state
+        } else {
+          setCategories(categoryData || []);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -210,14 +224,16 @@ export default function FormsPage() {
                     Unavailable
                   </Button>
                 )}
-                <Button
-                  asChild
-                  size="sm"
-                  className="bg-[#7c3090] text-white hover:bg-[#6c2780] gap-2 z-10 flex-1 sm:flex-none h-9"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Link href={`/forms/submit/${form.id}`}>Submit Form</Link>
-                </Button>
+                {isLoggedIn && (
+                  <Button
+                    asChild
+                    size="sm"
+                    className="bg-[#7c3090] text-white hover:bg-[#6c2780] gap-2 z-10 flex-1 sm:flex-none h-9"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Link href={`/forms/submit/${form.id}`}>Submit Form</Link>
+                  </Button>
+                )}
               </div>
             </div>
           ))}

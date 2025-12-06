@@ -74,7 +74,7 @@ export default function FormsManagementPage() {
 
       // Fetch categories
       const { data: categoryData, error: categoryError } = await supabase
-        .from("categories")
+        .from("form_categories")
         .select("*")
         .order("id");
 
