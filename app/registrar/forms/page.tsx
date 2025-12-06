@@ -8,6 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -20,6 +27,7 @@ interface FormType {
   id: string;
   name: string;
   description: string;
+  category: number | null;
   requires_lecturer_approval: boolean;
   requires_dean_approval: boolean;
   requires_registrar_approval: boolean;
@@ -38,6 +46,7 @@ export default function FormsManagementPage() {
   const [newForm, setNewForm] = useState({
     name: "",
     description: "",
+    category: "", // specific for UI, will parse to int
     requires_lecturer_approval: false,
     requires_dean_approval: false,
     requires_registrar_approval: true,
@@ -84,13 +93,33 @@ export default function FormsManagementPage() {
         templatePath = fileName;
       }
 
-      // 2. Create form type
-      const { error } = await supabase.from("form_types").insert([
-        {
-          ...newForm,
-          template_file: templatePath,
-        },
-      ]);
+      // 2. Prepare payload
+      const payload: any = {
+        name: newForm.name,
+        description: newForm.description,
+        requires_lecturer_approval: newForm.requires_lecturer_approval,
+        requires_dean_approval: newForm.requires_dean_approval,
+        requires_registrar_approval: newForm.requires_registrar_approval,
+        requires_accounts_receivable_approval:
+          newForm.requires_accounts_receivable_approval,
+        template_file: templatePath,
+      };
+
+      // Handle optional fields
+      if (newForm.deadline && newForm.deadline.trim() !== "") {
+        payload.deadline = newForm.deadline;
+      } else {
+        payload.deadline = null; // Important: Postgres TIMESTAMPTZ cannot accept empty string
+      }
+
+      if (newForm.category) {
+        payload.category = parseInt(newForm.category);
+      } else {
+        payload.category = null;
+      }
+
+      // 3. Create form type
+      const { error } = await supabase.from("form_types").insert([payload]);
 
       if (error) throw error;
 
@@ -98,6 +127,7 @@ export default function FormsManagementPage() {
       setNewForm({
         name: "",
         description: "",
+        category: "",
         requires_lecturer_approval: false,
         requires_dean_approval: false,
         requires_registrar_approval: true,
@@ -106,9 +136,9 @@ export default function FormsManagementPage() {
       });
       setTemplateFile(null);
       fetchForms();
-    } catch (error) {
-      console.error("Error creating form:", error);
-      alert("Failed to create form");
+    } catch (error: any) {
+      console.error("Error creating form:", error.message || error);
+      alert(`Failed to create form: ${error.message || "Unknown error"}`);
     } finally {
       setUploading(false);
     }
@@ -160,6 +190,25 @@ export default function FormsManagementPage() {
                     setNewForm({ ...newForm, description: e.target.value })
                   }
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  value={newForm.category}
+                  onValueChange={(value) =>
+                    setNewForm({ ...newForm, category: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Academic & Enrollment</SelectItem>
+                    <SelectItem value="2">Student Records</SelectItem>
+                    <SelectItem value="3">Financial Services</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
