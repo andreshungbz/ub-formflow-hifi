@@ -77,7 +77,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex flex-1 bg-background p-4 justify-start sm:justify-center sm:items-center min-h-[calc(100vh-8rem)]">
+    <div className="flex flex-1 bg-background p-4 justify-center items-center min-h-[calc(100vh-8rem)]">
       <Card className="w-full max-w-sm">
         <CardHeader className="flex flex-col items-center">
           <UserPlus className="w-12 h-12 text-ub-purple mb-2" />
