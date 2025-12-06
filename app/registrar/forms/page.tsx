@@ -36,6 +36,11 @@ interface FormType {
   deadline?: string;
 }
 
+interface Category {
+  id: number;
+  category: string;
+}
+
 export default function FormsManagementPage() {
   const [supabase] = useState(() => createClient());
   const [formTypes, setFormTypes] = useState<FormType[]>([]);
@@ -54,18 +59,29 @@ export default function FormsManagementPage() {
     deadline: "",
   });
   const [templateFile, setTemplateFile] = useState<File | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const fetchForms = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch forms
+      const { data: formData, error: formError } = await supabase
         .from("form_types")
         .select("*")
         .order("name");
 
-      if (error) throw error;
-      setFormTypes(data || []);
+      if (formError) throw formError;
+      setFormTypes(formData || []);
+
+      // Fetch categories
+      const { data: categoryData, error: categoryError } = await supabase
+        .from("categories")
+        .select("*")
+        .order("id");
+
+      if (categoryError) throw categoryError;
+      setCategories(categoryData || []);
     } catch (error) {
-      console.error("Error fetching forms:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
@@ -204,9 +220,11 @@ export default function FormsManagementPage() {
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">Academic & Enrollment</SelectItem>
-                    <SelectItem value="2">Student Records</SelectItem>
-                    <SelectItem value="3">Financial Services</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id.toString()}>
+                        {cat.category}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

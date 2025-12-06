@@ -8,19 +8,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-// Map category IDs to names (assuming 1 and 2 based on user's previous mock data)
-const CATEGORY_MAP: Record<number, string> = {
-  1: "Academic Forms",
-  2: "Admissions",
-  3: "Financial",
-  4: "Withdrawal",
-};
+interface Category {
+  id: number;
+  category: string;
+}
 
 interface FormType {
   id: string;
   name: string;
   description: string;
-  category: number | string | null;
+  category: number | null;
   tags: string[] | null;
   template_file: string | null;
   downloadUrl?: string | null;
@@ -29,6 +26,7 @@ interface FormType {
 
 export default function FormsPage() {
   const [forms, setForms] = useState<FormType[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All Categories");
@@ -36,17 +34,18 @@ export default function FormsPage() {
   const [supabase] = useState(() => createClient());
 
   useEffect(() => {
-    const fetchForms = async () => {
+    const fetchData = async () => {
       try {
-        const { data, error } = await supabase
+        // Fetch Forms
+        const { data: formData, error: formError } = await supabase
           .from("form_types")
           .select("*")
           .eq("is_active", true);
 
-        if (error) throw error;
+        if (formError) throw formError;
 
         // Use public URLs for templates (synchronous, no extra API calls)
-        const formsWithUrls = (data || []).map((form) => {
+        const formsWithUrls = (formData || []).map((form) => {
           let downloadUrl = null;
           if (form.template_file) {
             const { data: publicData } = supabase.storage
@@ -58,31 +57,38 @@ export default function FormsPage() {
         });
 
         setForms(formsWithUrls);
+
+        // Fetch Categories
+        const { data: categoryData, error: categoryError } = await supabase
+          .from("categories")
+          .select("*")
+          .order("id");
+
+        if (categoryError) throw categoryError;
+        setCategories(categoryData || []);
       } catch (error) {
-        console.error("Error fetching forms:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchForms();
+    fetchData();
   }, [supabase]);
 
-  // Get unique tags from fetched forms
-  const availableCategories = [
-    "All Categories",
-    ...Array.from(new Set(forms.flatMap((f) => f.tags || []))).sort(),
-  ];
-
   const filteredForms = forms.filter((form) => {
-    const formTags = form.tags || [];
     const matchesSearch =
       form.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (form.description &&
         form.description.toLowerCase().includes(searchQuery.toLowerCase()));
 
+    // Find category name from ID
+    const categoryName = form.category
+      ? categories.find((c) => c.id === form.category)?.category
+      : "Uncategorized";
+
     const matchesCategory =
-      activeCategory === "All Categories" || formTags.includes(activeCategory);
+      activeCategory === "All Categories" || categoryName === activeCategory;
 
     return matchesSearch && matchesCategory;
   });
@@ -120,19 +126,21 @@ export default function FormsPage() {
 
         {/* Categories */}
         <div className="flex flex-wrap gap-3">
-          {availableCategories.map((category) => (
-            <Button
-              key={category}
-              onClick={() => setActiveCategory(category)}
-              className={`rounded-md px-6 transition-colors ${
-                activeCategory === category
-                  ? "bg-[#7c3090] text-white hover:bg-[#6c2780]"
-                  : "bg-white text-black border border-gray-200 hover:bg-gray-50"
-              }`}
-            >
-              {category}
-            </Button>
-          ))}
+          {["All Categories", ...categories.map((c) => c.category)].map(
+            (category) => (
+              <Button
+                key={category}
+                onClick={() => setActiveCategory(category)}
+                className={`rounded-md px-6 transition-colors ${
+                  activeCategory === category
+                    ? "bg-[#7c3090] text-white hover:bg-[#6c2780]"
+                    : "bg-white text-black border border-gray-200 hover:bg-gray-50"
+                }`}
+              >
+                {category}
+              </Button>
+            )
+          )}
         </div>
 
         {/* Forms List */}
