@@ -1,10 +1,10 @@
 # UB FormFlow (SPP7)
 
-UB FormFlow is a web application that allows students of the University of Belize to conveniently submit forms online, keep track of form deadlines, generate form submission receipts, and view a comprehensive history of their submitted forms. It serves to enhance the transparency and efficiency of the form submission process for both students and university staff.
+UB FormFlow is a web application that enables University of Belize students to conveniently submit forms online, track form deadlines, generate form submission receipts, and view a comprehensive history of their submitted forms. It serves to enhance the transparency and efficiency of the form submission process for both students and university staff.
 
 The CodeCraft Solutions team that developed this application consists of [Andres Hung](https://github.com/andreshungbz), [Jennessa Sierra](https://github.com/jennxsierra), and [Tysha Daniels](https://github.com/aoideee).
 
-This repository contains the source code for the high-fidelity prototype, whose design was iterated on over the course of the 2025-1 semester for the CMPS3141 Human Computer Interface course. It implements the three main tasks:
+This repository contains the source code for the high-fidelity prototype, whose design was iterated upon over the course of the 2025-1 semester in the CMPS3141 Human Computer Interface course. It implements the three main tasks:
 
 1. Simple Task - Find out which forms I need to fill out soon.
 2. Intermediate Task - Get confirmation and proof that I submitted my form.
@@ -18,7 +18,7 @@ The high-fidelity prototype, externally hosted on Vercel, can be accessed online
 
 ## Installation Requirements
 
-The prototype can already be accessed and used for user testing online, but the application can be run locally by following the instructions below. The only prerequisite is to have [Node.js](https://nodejs.org/en/download/) installed on your machine.
+The prototype can already be accessed and used for online user testing, but the application can also be run locally by following the instructions below. The only prerequisite is to have [Node.js](https://nodejs.org/en/download/) installed on your machine.
 
 1. Clone this repository and enter the project directory:
 
